@@ -1,0 +1,108 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+  --page: #FAF8F5;
+  --surface: #FFFFFF;
+  --surface-muted: #F8FAFC;
+  --border: #CBD5E1;
+  --text: #0F172A;
+  --muted: #475569;
+  --focus: #2563EB;
+}
+
+html.dark {
+  color-scheme: dark;
+  --page: #131314;
+  --surface: #1E1E22;
+  --surface-muted: #141416;
+  --border: #2D2D34;
+  --text: #F4F4F6;
+  --muted: #C4C4CC;
+  --focus: #93C5FD;
+}
+
+body {
+  background: var(--page) !important;
+  color: var(--text);
+  font-family: 'DM Sans', system-ui, sans-serif;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  font-family: 'DM Sans', system-ui, sans-serif;
+  font-weight: 800;
+  letter-spacing: 0.015em;
+  text-transform: uppercase;
+}
+
+.text-stone-400,
+.text-stone-500,
+.text-slate-400,
+.text-slate-500 {
+  color: var(--muted);
+}
+
+[class~="bg-white"],
+[class~="bg-[#111C2E]"],
+[class~="bg-[#1E1E20]"],
+[class~="bg-[#1E1E22]"],
+[class~="bg-[#18181A]"],
+[class~="bg-[#18181B]"] {
+  background-color: var(--surface);
+}
+
+[class~="bg-slate-50"],
+[class~="bg-stone-50"],
+[class~="bg-[#FAF8F5]"],
+[class~="bg-[#F8FAFC]"],
+[class~="bg-[#F7F6F3]"],
+[class~="bg-[#0F192A]"],
+[class~="bg-[#141416]"],
+[class~="bg-[#172338]"],
+[class~="bg-[#131314]"] {
+  background-color: var(--surface-muted);
+}
+
+[class~="border-slate-200"],
+[class~="border-stone-200"],
+[class~="border-[#D8E1EE]"],
+[class~="border-[#E7E4DC]"],
+[class~="border-[#CBD5E1]"],
+[class~="border-[#29364A]"],
+[class~="border-[#2D2D34]"],
+[class~="border-[#2E2F34]"] {
+  border-color: var(--border);
+}
+
+[class~="bg-[#0B1220]"] {
+  background-color: var(--page);
+}
+
+[class~="text-[#1C1917]"],
+[class~="text-[#0F172A]"],
+[class~="text-[#292524]"] {
+  color: var(--text);
+}
+
+button {
+  font-weight: 700;
+  letter-spacing: 0.015em;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.leaflet-popup-content-wrapper {
+  border-radius: 12px;
+  padding: 4px;
+}

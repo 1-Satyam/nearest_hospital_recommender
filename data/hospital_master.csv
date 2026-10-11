@@ -1,0 +1,22 @@
+hospital_id,hospital_name,hospital_type,address,latitude,longitude,general_ward_total_beds,general_ward_available_beds,general_ward_occupancy_pct,admission_fee_inr,rating_5,review_count
+BBSR001,"All India Institute of Medical Sciences, Bhubaneswar",Government,"Sijua, Patrapada",20.2317,85.7788,1540,118,92.3,375,4.2,2652
+BBSR002,PGIMER & Capital Hospital Bhubaneswar,Government,"Unit 6, Ganga Nagar",20.2865,85.8374,720,64,91.1,0,3.8,1028
+BBSR003,SUM Ultimate Medicare,Private,"K8, Kalinga Nagar, Ghatikia",20.2539,85.7836,900,73,91.9,1500,4.7,11266
+BBSR004,"CARE Hospitals, Bhubaneswar",Private,"Plot 324, Prachi Enclave Road, Rail Vihar",20.3291,85.823,420,38,91.0,1800,4.4,8406
+BBSR005,Kalinga Hospital,Private,Chandrasekharpur,20.3338,85.817,410,47,88.5,1600,4.1,3900
+BBSR006,Hi-Tech Medical College and Hospital,Private,"Pandra, Rasulgarh",20.3036,85.855,560,55,90.2,950,3.9,1522
+BBSR007,Apollo Hospitals Bhubaneswar,Private,"Plot 251, Sainik School Road, Gajapati Nagar",20.2966,85.823,300,22,92.7,2200,4.7,31818
+BBSR008,"Manipal Hospitals, Bhubaneswar",Private,"Plot 1, Khandagiri",20.2568,85.7695,360,31,91.4,2000,4.8,17498
+BBSR009,UTKAL HOSPITAL,Private,"Defence Colony Road, Niladri Vihar",20.3375,85.839,280,35,87.5,1000,4.6,8829
+BBSR010,Sparsh Hospitals & Critical Care,Private,"A/407, Sparsh Hospital Road, Saheed Nagar",20.3008,85.8438,220,24,89.1,1250,4.6,4746
+BBSR011,Sunshine Hospital,Private,"371, Cuttack-Puri Road, Laxmisagar",20.2732,85.8491,240,29,87.9,900,4.6,5469
+BBSR012,Health Village Hospital,Private,"B/13, Indradhanu Market Road, IRC Village",20.2862,85.809,190,26,86.3,850,4.5,853
+BBSR013,IGKC Multispeciality Hospital,Private,"Ghatikia, Kalinganagar",20.2476,85.7825,210,18,91.4,1050,4.4,2518
+BBSR014,Shree Hospitals,Private,"246, Lewis Road, BJB Nagar",20.2646,85.834,170,21,87.6,750,4.5,2825
+BBSR015,Sushruta Hospital and Trauma Care,Private,"Forest Park Road, near Old Airport Square",20.2741,85.829,150,17,88.7,800,4.5,467
+BBSR016,Vivekanand Hospital Bhubaneswar,Private,"A-54/1, Paika Nagar, Baramunda",20.2768,85.8065,180,23,87.2,700,4.7,4073
+BBSR017,Usthi Hospital,Private,"N4, Plot N4-1/1, IRC Village, Nayapalli",20.2905,85.8068,160,20,87.5,850,4.3,623
+BBSR018,Max Hospital Bhubaneswar,Private,"Maitri Vihar Road, Chandrasekharpur",20.3228,85.8448,260,27,89.6,1900,4.3,3068
+BBSR019,Jagannath Hospital,Private,"Plot No. 185-P, Rupali Street, Saheed Nagar, Bhubaneswar, Odisha 751007",20.3008,85.8425,46,8,82.6,500,3.5,351
+BBSR020,Neelachal Hospital Pvt. Ltd.,Private,"A/84, near Chandrama Apartment, OFDC Colony, Unit 3, Kharvela Nagar, Bhubaneswar, Odisha 751001",20.2728,85.8421,47,9,80.9,500,4.9,1234
+BBSR021,"Kalinga Institute of Medical Sciences (KIMS)",Private,"KIIT Road, Patia",20.3547,85.8196,1200,105,91.3,800,4.4,9000

@@ -1,0 +1,22 @@
+hospital_id,hospital_name,specialties,emergency_24x7,ambulance_available,nabh_accredited
+BBSR001,"All India Institute of Medical Sciences, Bhubaneswar",General Medicine; General Surgery; Cardiology; Orthopedics; Pediatrics; ENT; Neurology,Yes,Yes,Yes
+BBSR002,PGIMER & Capital Hospital Bhubaneswar,General Medicine; General Surgery; Orthopedics; Pediatrics; Obstetrics & Gynaecology; Emergency,Yes,Yes,Yes
+BBSR003,SUM Ultimate Medicare,General Medicine; Cardiology; Neurology; Oncology; Nephrology; Orthopedics; General Surgery,Yes,Yes,Yes
+BBSR004,"CARE Hospitals, Bhubaneswar",Cardiology; Neurology; Nephrology; Oncology; Orthopedics; General Medicine,Yes,Yes,Yes
+BBSR005,Kalinga Hospital,General Medicine; General Surgery; Cardiology; Neurology; Orthopedics; Oncology,Yes,Yes,Yes
+BBSR006,Hi-Tech Medical College and Hospital,General Medicine; General Surgery; Cardiology; Neurology; Orthopedics; Pediatrics; Obstetrics,Yes,Yes,Yes
+BBSR007,Apollo Hospitals Bhubaneswar,Cardiology; Neurology; Oncology; Nephrology; Orthopedics; General Surgery; General Medicine,Yes,Yes,Yes
+BBSR008,"Manipal Hospitals, Bhubaneswar",Cardiology; Neurology; Oncology; Nephrology; Orthopedics; General Medicine; General Surgery,Yes,Yes,Yes
+BBSR009,UTKAL HOSPITAL,General Medicine; General Surgery; Orthopedics; Pediatrics; Cardiology; Obstetrics,Yes,Yes,Yes
+BBSR010,Sparsh Hospitals & Critical Care,Critical Care; General Medicine; General Surgery; Orthopedics; Cardiology; Trauma,Yes,Yes,Yes
+BBSR011,Sunshine Hospital,General Medicine; General Surgery; Cardiology; Orthopedics; Neurology; Pediatrics,Yes,Yes,Yes
+BBSR012,Health Village Hospital,General Medicine; General Surgery; Orthopedics; Pediatrics; Obstetrics; Emergency,Yes,Yes,No
+BBSR013,IGKC Multispeciality Hospital,General Medicine; General Surgery; Cardiology; Orthopedics; Neurology; Pediatrics,Yes,Yes,No
+BBSR014,Shree Hospitals,General Medicine; General Surgery; Orthopedics; Pediatrics; Obstetrics; Emergency,Yes,Yes,No
+BBSR015,Sushruta Hospital and Trauma Care,Trauma; General Surgery; Orthopedics; General Medicine; Critical Care,Yes,Yes,No
+BBSR016,Vivekanand Hospital Bhubaneswar,General Medicine; General Surgery; Orthopedics; Pediatrics; Cardiology; Emergency,Yes,Yes,No
+BBSR017,Usthi Hospital,General Medicine; General Surgery; Pediatrics; Orthopedics; Emergency; Diagnostics,Yes,Yes,No
+BBSR018,Max Hospital Bhubaneswar,Cardiology; Neurology; Oncology; Nephrology; Orthopedics; General Medicine,Yes,Yes,Yes
+BBSR019,Jagannath Hospital,"General Medicine, Pediatrics, Neurology, Obstetrics, Neonatology, General Surgery,Orthopedics",Yes,Yes,Yes
+BBSR020,Neelachal Hospital Pvt. Ltd.,"General Medicine, Nephrology, Paediatrics, Obstetrics, Gynaecology,Orthopaedics",Yes,Yes,Yes
+BBSR021,Kalinga Institute of Medical Sciences (KIMS),General Medicine; General Surgery; Cardiology; Neurology; Oncology; Orthopedics; Pediatrics,Yes,Yes,Yes

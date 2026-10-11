@@ -1,0 +1,8 @@
+run = "bash run.sh"
+entrypoint = "run.sh"
+
+[nix]
+channel = "stable-24_05"
+
+[deployment]
+run = ["bash", "run.sh"]
