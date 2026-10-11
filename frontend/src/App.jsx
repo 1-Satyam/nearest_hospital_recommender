@@ -13,11 +13,12 @@ import DeskPortalModal from './components/DeskPortalModal';
 import LocationSelectorModal from './components/LocationSelectorModal';
 import AuthModal from './components/AuthModal';
 import ChatbotDrawer from './components/ChatbotDrawer';
-import { IconAlert, IconBed, IconShield, IconSearch, IconCheck, IconArrowRight, IconMapPin } from './components/Icons';
+import SplashScreen from './components/SplashScreen';
+import { IconAlert, IconBed, IconShield, IconSearch, IconCheck, IconArrowRight, IconMapPin, IconPhone, IconClock } from './components/Icons';
 
 const latestActiveHold = (ledger) => [...ledger].reverse().find((hold) => hold.status === 'HELD') || null;
 
-export default function App() {
+function HospitalApp() {
   useEffect(() => {
     const handleReset = () => {
       setActiveHoldPass(null);
@@ -72,6 +73,7 @@ export default function App() {
         { enableHighAccuracy: true, timeout: 6000 }
       );
     }
+
   }, []);
 
   const [hospitals, setHospitals] = useState([]);
@@ -85,6 +87,7 @@ export default function App() {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('gateway');
   const [selectedHospital, setSelectedHospital] = useState(null);
+  const [hospitalSort, setHospitalSort] = useState('near');
 
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showDeskPortal, setShowDeskPortal] = useState(false);
@@ -332,12 +335,24 @@ export default function App() {
     return filtered;
   }, [hospitals, searchQuery, normalizedSpecialty, emergencyOnly, pmjayOnly]);
 
-  const visibleHospitals = filterCardsToTopN ? displayedHospitals.slice(0, Number(topN) || 10) : displayedHospitals;
+  const sortedHospitals = useMemo(() => {
+    const sorted = [...displayedHospitals];
+    if (hospitalSort === 'beds') {
+      sorted.sort((a, b) => Number(b.general_ward_available_beds || 0) - Number(a.general_ward_available_beds || 0));
+    } else if (hospitalSort === 'recommended') {
+      sorted.sort((a, b) => Number(a.rank || Number.MAX_SAFE_INTEGER) - Number(b.rank || Number.MAX_SAFE_INTEGER));
+    } else {
+      sorted.sort((a, b) => Number(a.road_distance_km ?? a.distance_km ?? Number.MAX_SAFE_INTEGER) -
+        Number(b.road_distance_km ?? b.distance_km ?? Number.MAX_SAFE_INTEGER));
+    }
+    return sorted;
+  }, [displayedHospitals, hospitalSort]);
+  const visibleHospitals = filterCardsToTopN ? sortedHospitals.slice(0, Number(topN) || 10) : sortedHospitals;
   const mapHospitals = visibleHospitals.length ? visibleHospitals : displayedHospitals.length ? displayedHospitals : hospitals;
 
   return (
     <div className={`min-h-screen flex flex-col transition-colors duration-200 ${
-      isDarkMode ? 'bg-[#0B1220] text-[#F4F1EC]' : 'bg-[#F4EDE5] text-[#292929]'
+      isDarkMode ? 'bg-[#0A1B22] text-[#E8F3F6]' : 'bg-[#E6F4F6] text-[#0F2233]'
     }`}>
       {/* Top Header Navbar */}
       <Navbar
@@ -421,7 +436,6 @@ export default function App() {
               </button>
             </div>
 
-            {/* Clear, High-Contrast Section Title */}
             <div className="text-center max-w-2xl mx-auto space-y-2">
               <h1 className={`text-2xl sm:text-3xl lg:text-4xl font-black tracking-tight leading-tight ${
                 isDarkMode ? 'text-white' : 'text-[#1C1917]'
@@ -435,127 +449,115 @@ export default function App() {
               </p>
             </div>
 
-            {/* Senior-Friendly Readable Cards Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 max-w-4xl mx-auto items-stretch">
-              {/* Card A: Emergency Care */}
-              <div className={`rounded-3xl border-2 p-6 sm:p-8 shadow-sm flex flex-col justify-between hover:shadow-xl transition-all border-t-8 border-t-red-600 ${
-                isDarkMode ? 'bg-[#111C2E] border-[#29364A]' : 'bg-white border-[#D8E1EE]'
-              }`}>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-black tracking-wider text-red-600 bg-red-500/10 px-3 py-1 rounded-full uppercase">
-                      IMMEDIATE CARE
-                    </span>
-                    <span className="text-xs sm:text-sm font-extrabold text-red-500 font-mono">30-Min Lock</span>
-                  </div>
-
-                  <div>
-                    <h2 className={`text-2xl sm:text-3xl font-black tracking-tight ${
-                      isDarkMode ? 'text-white' : 'text-[#1C1917]'
-                    }`}>
-                      EMERGENCY
-                    </h2>
-                    {/* Senior-Friendly Readable Paragraph */}
-                    <p className={`text-sm sm:text-base font-medium mt-2 leading-relaxed ${
-                      isDarkMode ? 'text-[#D1D5DB]' : 'text-stone-700'
-                    }`}>
-                      For acute trauma, heart attacks, stroke, accidents, severe bleeding, or critical ICU care. Real-time proximity matching from your exact coordinates.
-                    </p>
-                  </div>
-
-                  {/* Accessible Checklist */}
-                  <ul className={`space-y-3.5 pt-4 border-t ${
-                    isDarkMode ? 'border-[#2E2F34] text-[#F3F4F6]' : 'border-stone-100 text-stone-800'
-                  }`}>
-                    <li className="flex items-start gap-2.5 text-sm sm:text-base font-semibold leading-normal">
-                      <IconCheck className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
-                      <span>Live 21 Hospital Proximity & Available ER Beds</span>
-                    </li>
-                    <li className="flex items-start gap-2.5 text-sm sm:text-base font-semibold leading-normal">
-                      <IconCheck className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
-                      <span>6-Digit Instant Patient OTP Verification</span>
-                    </li>
-                    <li className="flex items-start gap-2.5 text-sm sm:text-base font-semibold leading-normal">
-                      <IconCheck className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
-                      <span>30-Minute Guaranteed Bed Hold Timer</span>
-                    </li>
-                    <li className="flex items-start gap-2.5 text-sm sm:text-base font-semibold leading-normal">
-                      <IconCheck className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
-                      <span>Direct Hospital Emergency Desk Phone & Tap-to-Call</span>
-                    </li>
-                  </ul>
+            <div className="mx-auto grid max-w-4xl grid-cols-1 gap-4 md:grid-cols-2 md:gap-5">
+              <section className={`flex flex-col rounded-[22px] border p-5 sm:p-6 ${
+                isDarkMode ? 'bg-[#12303D] border-[#245160]' : 'bg-white border-[#D7E5E8]'
+              }`} aria-labelledby="emergency-beds-heading">
+                <div className="flex items-start justify-between">
+                  <span className="flex h-[46px] w-[46px] shrink-0 items-center justify-center rounded-2xl bg-red-500/10 text-red-600">
+                    <IconAlert className="h-7 w-7" />
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-red-500/10 px-3 py-1 text-[11px] font-extrabold tracking-wider text-red-700 dark:text-red-300">
+                    <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-current" />
+                    HIGH PRIORITY
+                  </span>
                 </div>
-
+                <h2 id="emergency-beds-heading" className={`mt-3 text-[21px] font-black leading-tight ${
+                  isDarkMode ? 'text-white' : 'text-[#123B50]'
+                }`}>
+                  Emergency Beds
+                </h2>
+                <p className={`mt-3 text-sm ${
+                  isDarkMode ? 'text-[#A8C1CB]' : 'text-[#4E6B79]'
+                }`}>
+                  Urgent care, trauma and critical medical needs.
+                </p>
+                <div className={`my-4 flex items-center gap-2 text-[13px] font-bold ${
+                  isDarkMode ? 'text-[#EAF4F7]' : 'text-[#123B50]'
+                }`}>
+                  <IconAlert className="h-[18px] w-[18px] shrink-0 text-red-600" />
+                  Emergency / urgent care
+                </div>
                 <button
+                  type="button"
                   onClick={() => {
                     setEmergencyOnly(true);
                     setActiveTab('explore');
                   }}
-                  className="mt-6 w-full bg-red-600 hover:bg-red-700 text-white font-black text-base sm:text-lg py-3.5 sm:py-4 px-6 rounded-2xl shadow-lg shadow-red-500/20 transition flex items-center justify-center gap-2"
+                  className="flex min-h-[52px] w-full items-center justify-between rounded-[14px] bg-red-600 px-4 text-left text-base font-bold text-white transition hover:bg-red-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-400"
                 >
-                  <span>Enter Emergency Flow</span>
-                  <IconArrowRight className="w-5 h-5" />
+                  Find Emergency Beds
+                  <IconArrowRight className="h-5 w-5 shrink-0" />
                 </button>
-              </div>
+              </section>
 
-              {/* Card B: General Admission Ward Visualizer */}
-              <div className={`rounded-3xl border-2 p-6 sm:p-8 shadow-sm flex flex-col justify-between hover:shadow-xl transition-all border-t-8 border-t-emerald-600 ${
-                isDarkMode ? 'bg-[#111C2E] border-[#29364A]' : 'bg-white border-[#D8E1EE]'
-              }`}>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-black tracking-wider text-emerald-600 bg-emerald-500/10 px-3 py-1 rounded-full uppercase">
-                      ELECTIVE & SPECIALTY
-                    </span>
-                    <span className="text-xs sm:text-sm font-extrabold text-emerald-500 font-mono">Ward Visualizer</span>
-                  </div>
-
-                  <div>
-                    <h2 className={`text-2xl sm:text-3xl font-black tracking-tight ${
-                      isDarkMode ? 'text-white' : 'text-[#1C1917]'
-                    }`}>
-                      GENERAL ADMISSION
-                    </h2>
-                    {/* Senior-Friendly Readable Paragraph */}
-                    <p className={`text-sm sm:text-base font-medium mt-2 leading-relaxed ${
-                      isDarkMode ? 'text-[#D1D5DB]' : 'text-stone-700'
-                    }`}>
-                      For planned clinical specialties (Cardiology, Orthopedics, Neurology, Pediatrics, General Medicine) with interactive ward bed grids.
-                    </p>
-                  </div>
-
-                  {/* Accessible Checklist */}
-                  <ul className={`space-y-3.5 pt-4 border-t ${
-                    isDarkMode ? 'border-[#2E2F34] text-[#F3F4F6]' : 'border-stone-100 text-stone-800'
-                  }`}>
-                    <li className="flex items-start gap-2.5 text-sm sm:text-base font-semibold leading-normal">
-                      <IconCheck className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
-                      <span>5-Step Admission Progress Navigation</span>
-                    </li>
-                    <li className="flex items-start gap-2.5 text-sm sm:text-base font-semibold leading-normal">
-                      <IconCheck className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
-                      <span>Visual Departmental Ward & Unit Selection (Male/Female/HDU)</span>
-                    </li>
-                    <li className="flex items-start gap-2.5 text-sm sm:text-base font-semibold leading-normal">
-                      <IconCheck className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
-                      <span>Patient Intake & PMJAY Cashless Validation</span>
-                    </li>
-                    <li className="flex items-start gap-2.5 text-sm sm:text-base font-semibold leading-normal">
-                      <IconCheck className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
-                      <span>30-Minute Hold Reservation & Printable Pass</span>
-                    </li>
-                  </ul>
+              <section className={`flex flex-col rounded-[22px] border p-5 sm:p-6 ${
+                isDarkMode ? 'bg-[#12303D] border-[#245160]' : 'bg-white border-[#D7E5E8]'
+              }`} aria-labelledby="general-beds-heading">
+                <div className="flex items-start justify-between">
+                  <span className="flex h-[46px] w-[46px] shrink-0 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-700 dark:text-emerald-300">
+                    <IconBed className="h-7 w-7" />
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-3 py-1 text-[11px] font-extrabold tracking-wider text-emerald-700 dark:text-emerald-300">
+                    <span aria-hidden="true" className="h-1.5 w-1.5 rounded-full bg-current" />
+                    PLANNED CARE
+                  </span>
                 </div>
-
+                <h2 id="general-beds-heading" className={`mt-3 text-[21px] font-black leading-tight ${
+                  isDarkMode ? 'text-white' : 'text-[#123B50]'
+                }`}>
+                  General Beds
+                </h2>
+                <p className={`mt-3 text-sm ${
+                  isDarkMode ? 'text-[#A8C1CB]' : 'text-[#4E6B79]'
+                }`}>
+                  General wards and non-emergency specialties.
+                </p>
+                <div className={`my-4 flex items-center gap-2 text-[13px] font-bold ${
+                  isDarkMode ? 'text-[#EAF4F7]' : 'text-[#123B50]'
+                }`}>
+                  <IconClock className="h-[18px] w-[18px] shrink-0 text-emerald-600" />
+                  Planned admission
+                </div>
                 <button
-                  onClick={() => handleGeneralWardRequest(selectedHospital)}
-                  className="mt-6 w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black text-base sm:text-lg py-3.5 sm:py-4 px-6 rounded-2xl shadow-lg shadow-emerald-500/20 transition flex items-center justify-center gap-2"
+                  type="button"
+                  onClick={() => setActiveTab('general_flow')}
+                  className="mt-auto flex min-h-[52px] w-full items-center justify-between rounded-[14px] bg-emerald-700 px-4 text-left text-base font-bold text-white transition hover:bg-emerald-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-500"
                 >
-                  <span>Enter General Admission Flow</span>
-                  <IconArrowRight className="w-5 h-5" />
+                  Find General Beds
+                  <IconArrowRight className="h-5 w-5 shrink-0" />
                 </button>
-              </div>
+              </section>
             </div>
+
+            <p className={`mx-auto flex max-w-4xl items-center gap-2 px-1 text-sm ${
+              isDarkMode ? 'text-[#A8C1CB]' : 'text-[#4E6B79]'
+            }`}>
+              <IconShield className="h-5 w-5 shrink-0 text-emerald-600" />
+              Bed availability can change. Please confirm with the hospital before travelling.
+            </p>
+
+            <a
+              href="tel:112"
+              className={`mx-auto flex min-h-16 max-w-4xl items-center gap-3 rounded-2xl border p-3 no-underline transition hover:shadow-sm ${
+                isDarkMode
+                  ? 'border-red-900/60 bg-red-950/30 text-white'
+                  : 'border-red-200 bg-red-50 text-[#123B50]'
+              }`}
+            >
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300">
+                <IconPhone className="h-5 w-5" />
+              </span>
+              <span className="text-left">
+                <span className="block text-sm font-bold">Need urgent help?</span>
+                <span className={`block text-xs ${
+                  isDarkMode ? 'text-[#A8C1CB]' : 'text-[#4E6B79]'
+                }`}>
+                  Call emergency services <strong className="text-red-700 dark:text-red-300">112</strong>
+                </span>
+              </span>
+              <IconArrowRight className="ml-auto h-5 w-5 shrink-0 text-red-600" />
+            </a>
           </div>
         )}
 
@@ -589,7 +591,7 @@ export default function App() {
               }));
               setActiveTab('hold_pass');
             }}
-            onCancel={() => setActiveTab('gateway')}
+            onBack={() => setActiveTab('gateway')}
           />
         )}
 
@@ -608,8 +610,45 @@ export default function App() {
 
         {activeTab === 'explore' && (
           <div className="space-y-6">
+            <section className={`rounded-2xl border p-4 shadow-sm ${
+              isDarkMode ? 'bg-[#112B36] border-[#24505E]' : 'bg-white border-[#DCE6EA]'
+            }`}>
+              <div className="flex flex-wrap items-center gap-2.5">
+                <span className={`text-xs font-extrabold uppercase tracking-wider ${
+                  isDarkMode ? 'text-teal-300' : 'text-teal-800'
+                }`}>
+                  Origin
+                </span>
+                <span className={`rounded-full px-3 py-1.5 text-xs font-bold ${
+                  userLocation.isLiveGPS
+                    ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
+                    : isDarkMode
+                    ? 'bg-[#0A1B22] text-slate-200'
+                    : 'bg-[#E6F4F6] text-[#0F2233]'
+                }`}>
+                  {userLocation.name}
+                </span>
+                <span className={`hidden sm:inline text-xs ${
+                  isDarkMode ? 'text-[#A3BBC5]' : 'text-[#5B6B7A]'
+                }`}>
+                  {userLocation.lat.toFixed(4)}, {userLocation.lon.toFixed(4)}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setShowLocationModal(true)}
+                  className={`ml-auto min-h-10 rounded-xl border px-3 text-xs font-bold transition ${
+                    isDarkMode
+                      ? 'border-[#24505E] bg-[#0A1B22] text-teal-200 hover:bg-[#173845]'
+                      : 'border-[#DCE6EA] bg-[#F5F8FA] text-teal-800 hover:bg-[#E6F4F6]'
+                  }`}
+                >
+                  Change location
+                </button>
+              </div>
+            </section>
+
             <div className={`p-4 rounded-3xl border shadow-sm flex flex-col md:flex-row gap-3 items-center justify-between ${
-              isDarkMode ? 'bg-[#111C2E] border-[#29364A]' : 'bg-white border-[#D8E1EE]'
+              isDarkMode ? 'bg-[#112B36] border-[#24505E]' : 'bg-white border-[#DCE6EA]'
             }`}>
               <div className="relative flex-1 w-full">
                 <IconSearch className="w-4 h-4 text-stone-400 absolute left-3.5 top-3" />
@@ -618,8 +657,8 @@ export default function App() {
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
                   placeholder="Search hospital name, area, or specialty..."
-                  className={`w-full pl-10 pr-4 py-2 text-xs sm:text-sm rounded-xl border focus:outline-none focus:ring-2 focus:ring-blue-500 ${
-                    isDarkMode ? 'bg-[#0B1220] border-[#334155] text-white placeholder-stone-400' : 'bg-[#F8FAFC] border-[#CBD5E1] text-slate-900'
+                  className={`w-full pl-10 pr-4 py-2.5 text-sm rounded-xl border focus:outline-none focus:ring-2 focus:ring-teal-600 ${
+                    isDarkMode ? 'bg-[#0A1B22] border-[#24505E] text-white placeholder-stone-400' : 'bg-[#F5F8FA] border-[#DCE6EA] text-slate-900'
                   }`}
                 />
               </div>
@@ -631,8 +670,8 @@ export default function App() {
                     emergencyOnly 
                       ? 'bg-red-500/20 text-red-400 border-red-500/40' 
                       : isDarkMode 
-                      ? 'bg-[#28282B] border-[#38383E] text-stone-300' 
-                      : 'bg-[#F1F5F9] border-[#CBD5E1] text-slate-700'
+                        ? 'bg-[#0A1B22] border-[#24505E] text-stone-300'
+                        : 'bg-[#F5F8FA] border-[#DCE6EA] text-slate-700'
                   }`}
                 >
                   24x7 Emergency
@@ -643,8 +682,8 @@ export default function App() {
                     pmjayOnly 
                       ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40' 
                       : isDarkMode 
-                      ? 'bg-[#28282B] border-[#38383E] text-stone-300' 
-                      : 'bg-[#F1F5F9] border-[#CBD5E1] text-slate-700'
+                        ? 'bg-[#0A1B22] border-[#24505E] text-stone-300'
+                        : 'bg-[#F5F8FA] border-[#DCE6EA] text-slate-700'
                   }`}
                 >
                   PM-JAY Empanelled
@@ -652,14 +691,56 @@ export default function App() {
               </div>
             </div>
 
+            {specialtiesList.length > 0 && (
+              <section className={`rounded-2xl border px-4 py-3 ${
+                isDarkMode ? 'bg-[#112B36] border-[#24505E]' : 'bg-white border-[#DCE6EA]'
+              }`}>
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className={`mr-1 text-xs font-extrabold uppercase tracking-wider ${
+                    isDarkMode ? 'text-red-300' : 'text-red-700'
+                  }`}>
+                    Fast specialty filters
+                  </span>
+                  {specialtiesList.slice(0, 5).map((specialty) => (
+                    <button
+                      key={specialty}
+                      type="button"
+                      aria-pressed={selectedSpecialty === specialty}
+                      onClick={() => setSelectedSpecialty(selectedSpecialty === specialty ? '' : specialty)}
+                      className={`min-h-10 rounded-full border px-3 text-xs font-bold transition ${
+                        selectedSpecialty === specialty
+                          ? 'border-teal-700 bg-teal-700 text-white'
+                          : isDarkMode
+                          ? 'border-[#24505E] bg-[#0A1B22] text-slate-200 hover:bg-[#173845]'
+                          : 'border-[#DCE6EA] bg-[#F5F8FA] text-[#0F2233] hover:bg-[#E6F4F6]'
+                      }`}
+                    >
+                      {specialty}
+                    </button>
+                  ))}
+                  {selectedSpecialty && (
+                    <button
+                      type="button"
+                      onClick={() => setSelectedSpecialty('')}
+                      className={`min-h-10 rounded-full px-3 text-xs font-bold underline underline-offset-2 ${
+                        isDarkMode ? 'text-slate-300' : 'text-slate-600'
+                      }`}
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+              </section>
+            )}
+
             <TopNSlider topN={topN} setTopN={handleTopNChange} totalCount={hospitals.length} isDarkMode={isDarkMode} />
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
               <div className="lg:col-span-7 space-y-4">
                 <div className={`flex items-center justify-between text-xs px-1 ${isDarkMode ? 'text-slate-300' : 'text-slate-600'}`}>
-                  <div className="flex items-center justify-between flex-wrap gap-2 w-full">
-                    <span>
-                      Showing <b>{visibleHospitals.length}</b> of all <b>{hospitals.length || displayedHospitals.length || 0}</b> hospitals relative to <b>{userLocation.name}</b>
+                  <div className="flex w-full flex-wrap items-center justify-between gap-3">
+                    <span className="text-sm">
+                      Showing <b>{visibleHospitals.length}</b> of <b>{displayedHospitals.length}</b> nearby hospitals
                     </span>
                     <button
                       type="button"
@@ -670,10 +751,53 @@ export default function App() {
                           : 'border-blue-300 bg-blue-50 text-blue-800 hover:bg-blue-100'
                       }`}
                     >
-                      {filterCardsToTopN ? `Show All ${hospitals.length || displayedHospitals.length || 0} Hospitals` : `Filter to Top ${topN} Only`}
+                      {filterCardsToTopN ? `Show all ${displayedHospitals.length}` : `Show top ${topN}`}
                     </button>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <div className={`inline-flex gap-1 rounded-xl p-1 ${
+                        isDarkMode ? 'bg-[#112B36]' : 'bg-[#DCE6EA]'
+                      }`} role="group" aria-label="Type of care">
+                        <button
+                          type="button"
+                          aria-pressed={emergencyOnly}
+                          onClick={() => setEmergencyOnly(true)}
+                          className={`min-h-10 rounded-lg px-3 text-xs font-extrabold ${
+                            emergencyOnly
+                              ? isDarkMode ? 'bg-[#1C3945] text-red-300 shadow-sm' : 'bg-white text-red-700 shadow-sm'
+                              : isDarkMode ? 'text-slate-300' : 'text-slate-700'
+                          }`}
+                        >
+                          Emergency
+                        </button>
+                        <button
+                          type="button"
+                          aria-pressed={!emergencyOnly}
+                          onClick={() => setEmergencyOnly(false)}
+                          className={`min-h-10 rounded-lg px-3 text-xs font-extrabold ${
+                            !emergencyOnly
+                              ? isDarkMode ? 'bg-[#1C3945] text-teal-300 shadow-sm' : 'bg-white text-teal-800 shadow-sm'
+                              : isDarkMode ? 'text-slate-300' : 'text-slate-700'
+                          }`}
+                        >
+                          General
+                        </button>
+                      </div>
+                      <label className="flex items-center gap-2 font-semibold">
+                        <span>Sorted by</span>
+                        <select
+                          value={hospitalSort}
+                          onChange={(event) => setHospitalSort(event.target.value)}
+                          className={`min-h-10 rounded-xl border px-2 text-xs ${
+                            isDarkMode ? 'border-[#24505E] bg-[#112B36] text-white' : 'border-[#DCE6EA] bg-white text-[#0F2233]'
+                          }`}
+                        >
+                          <option value="near">Nearest first</option>
+                          <option value="recommended">Recommended order</option>
+                          <option value="beds">Most beds free</option>
+                        </select>
+                      </label>
+                    </div>
                   </div>
-                  <span className="text-[11px]">Score = 1000 * Rating - Fee - Dist</span>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -695,6 +819,20 @@ export default function App() {
                       isDarkMode={isDarkMode}
                     />
                   ))}
+                  {loading && (
+                    <p role="status" className={`col-span-full rounded-2xl border p-5 text-center text-sm font-semibold ${
+                      isDarkMode ? 'border-[#24505E] bg-[#112B36] text-slate-200' : 'border-[#DCE6EA] bg-white text-[#5B6B7A]'
+                    }`}>
+                      Checking nearby hospitals…
+                    </p>
+                  )}
+                  {!loading && visibleHospitals.length === 0 && (
+                    <p role="status" className={`col-span-full rounded-2xl border p-5 text-center text-sm font-semibold ${
+                      isDarkMode ? 'border-[#24505E] bg-[#112B36] text-slate-200' : 'border-[#DCE6EA] bg-white text-[#5B6B7A]'
+                    }`}>
+                      No hospitals match those filters. Try a different search or clear a filter.
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -794,4 +932,14 @@ export default function App() {
       )}
     </div>
   );
+}
+
+export default function App() {
+  const [splashComplete, setSplashComplete] = useState(false);
+
+  if (!splashComplete) {
+    return <SplashScreen onReady={() => setSplashComplete(true)} />;
+  }
+
+  return <HospitalApp />;
 }

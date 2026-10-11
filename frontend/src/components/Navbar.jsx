@@ -1,5 +1,6 @@
 import React from 'react';
-import { IconHospital, IconPhone, IconMapPin, IconShield, IconDatabase, IconArrowRight, IconSun, IconMoon, IconMenu } from './Icons';
+import { IconPhone, IconMapPin, IconShield, IconDatabase, IconArrowRight, IconSun, IconMoon, IconMenu } from './Icons';
+import ArogyaLogo from './ArogyaLogo';
 
 export default function Navbar({
   user,
@@ -78,7 +79,7 @@ export default function Navbar({
       {/* 3. Main Navigation Bar */}
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-15 sm:h-16 gap-2">
-          {/* Left: Hamburger Button + ArogyaSetu Logo */}
+          {/* Left: Hamburger Button + Arogya Logo */}
           <div className="flex items-center space-x-2.5 sm:space-x-3.5">
             <button
               onClick={onToggleSidebar}
@@ -97,22 +98,22 @@ export default function Navbar({
               className="flex items-center space-x-2.5 cursor-pointer" 
               onClick={() => setActiveTab('gateway')}
             >
-              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
-                <IconHospital className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 flex items-center justify-center shadow-md shadow-emerald-500/20">
+                <ArogyaLogo className="w-7 h-7 sm:w-8 sm:h-8" />
               </div>
               <div className="flex flex-col">
                 <div className="flex items-center space-x-1.5">
                   <span className={`font-extrabold text-lg sm:text-xl tracking-tight leading-none ${
                     isDarkMode ? 'text-white' : 'text-[#1C1917]'
                   }`}>
-                    Arogya<span className="text-blue-600 font-extrabold">Setu</span>
+                    Arogya
                   </span>
                   <span className="text-[10px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-blue-500/10 text-blue-600 border border-blue-500/20">
                     BBSR
                   </span>
                 </div>
                 <span className="text-[10px] uppercase font-bold text-stone-500 dark:text-stone-400 tracking-wider mt-0.5 hidden sm:block">
-                  Bhubaneswar Healthcare Network
+                  Nearest Hospital Recommender
                 </span>
               </div>
             </div>

@@ -63,7 +63,7 @@ def get_available_groq_models(api_key: str):
     url = "https://api.groq.com/openai/v1/models"
     headers = {
         "Authorization": f"Bearer {api_key}",
-        "User-Agent": "ArogyaSetu-BBSR/1.0"
+        "User-Agent": "Arogya-BBSR/1.0"
     }
     req = urllib.request.Request(url, headers=headers)
     try:
@@ -86,7 +86,7 @@ def query_groq_api(user_message: str, api_key: str) -> Optional[str]:
     headers = {
         "Authorization": f"Bearer {api_key}",
         "Content-Type": "application/json",
-        "User-Agent": "ArogyaSetu-BBSR/1.0"
+        "User-Agent": "Arogya-BBSR/1.0"
     }
     
     candidate_models = []
@@ -134,7 +134,7 @@ def query_groq_api(user_message: str, api_key: str) -> Optional[str]:
                 {
                     "role": "system",
                     "content": (
-                        "You are Arogya Setu Assistant, a helpful and empathetic clinical assistant for Bhubaneswar, Odisha. "
+                        "You are Arogya Assistant, a helpful and empathetic clinical assistant for Bhubaneswar, Odisha. "
                         "You guide citizens on hospital discovery among Bhubaneswar's 21 institutions (e.g., AIIMS Bhubaneswar, "
                         "PGIMER Capital Hospital, SUM Ultimate Medicare, Apollo, KIMS, Sparsh), emergency ambulance triage (dial 108), "
                         "30-minute bed reservations, PM-JAY / BSKY cashless admissions, and general healthcare queries. "
@@ -172,7 +172,7 @@ def conversational_ai_engine(query: str) -> str:
     
     if re.search(r"^(hi|hello|hey|namaste|greetings|good\s+(morning|afternoon|evening)|howdy)\b", q_lower):
         return (
-            "Hello! I am **Arogya Setu Assistant**, your healthcare and hospital triage guide for Bhubaneswar.\n\n"
+            "Hello! I am **Arogya Assistant**, your healthcare and hospital triage guide for Bhubaneswar.\n\n"
             "I can assist you with emergency hospital routing, live bed vacancy tracking, clinical triage guidance, and any general healthcare questions.\n\n"
             "How can I help you or your family right now?"
         )
@@ -231,7 +231,7 @@ def conversational_ai_engine(query: str) -> str:
     if re.search(r"(hold|timer|30 min|lock|reservation|expiry|expire)", q_lower):
         return (
             "### 30-Minute Temporary Bed Hold Protocol\n\n"
-            "To prevent bed hoarding while protecting transit patients, Arogya Setu uses a **Two-Phase Lock Protocol**:\n\n"
+            "To prevent bed hoarding while protecting transit patients, Arogya uses a **Two-Phase Lock Protocol**:\n\n"
             "1. **OTP Verification**: Verifying the 6-digit OTP locks your chosen bed unit.\n"
             "2. **Server-Side Countdown**: A strict 30-minute server countdown begins immediately.\n"
             "3. **Casualty Check-in**: Arrive at the admission desk and present your Booking Reference.\n"
@@ -239,9 +239,9 @@ def conversational_ai_engine(query: str) -> str:
         )
 
     return (
-        "### Arogya Setu Assistant\n\n"
+        "### Arogya Assistant\n\n"
         f"Regarding your query: *\"{q}\"*\n\n"
-        "Arogya Setu coordinates clinical triage, real-time hospital bed discovery, and emergency healthcare routing across Bhubaneswar.\n\n"
+        "Arogya coordinates clinical triage, real-time hospital bed discovery, and emergency healthcare routing across Bhubaneswar.\n\n"
         "* **Emergency Care**: Dial **108** (Ambulance) or tap **Emergency Flow** to lock a provisional casualty bed.\n"
         "* **Departmental Wards**: Use the left dashboard to inspect live vacancy grids across clinical specialties.\n\n"
         "How else can I assist your medical search today?"
@@ -261,9 +261,9 @@ def chat_with_bot(payload: ChatMessage):
             if ranking_prompt and "Score = 1000 * Rating" not in ai_reply:
                 fallback = conversational_ai_engine(message)
                 logger.info("Using deterministic response for scoring question")
-                return {"response": fallback, "mode": "ai", "provider": "Arogya Setu Assistant"}
+                return {"response": fallback, "mode": "ai", "provider": "Arogya Assistant"}
             logger.info("Chatbot provider response returned")
-            return {"response": ai_reply, "mode": "ai", "provider": "Arogya Setu Assistant"}
+            return {"response": ai_reply, "mode": "ai", "provider": "Arogya Assistant"}
         else:
             logger.warning("Chatbot provider unavailable; using local response engine")
     else:
@@ -272,5 +272,5 @@ def chat_with_bot(payload: ChatMessage):
     return {
         "response": conversational_ai_engine(message),
         "mode": "ai",
-        "provider": "Arogya Setu Assistant"
+        "provider": "Arogya Assistant"
     }

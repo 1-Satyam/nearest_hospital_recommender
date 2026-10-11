@@ -29,7 +29,7 @@ class RoutingService:
             
             coord_str = ";".join(coords)
             url = f"https://router.project-osrm.org/table/v1/driving/{coord_str}?sources=0&annotations=duration,distance"
-            req = urllib.request.Request(url, headers={'User-Agent': 'ArogyaSetu-BBSR-Hospital-Recommender/1.0'})
+            req = urllib.request.Request(url, headers={'User-Agent': 'Arogya-BBSR-Hospital-Recommender/1.0'})
             with urllib.request.urlopen(req, timeout=timeout_sec) as resp:
                 data = json.loads(resp.read().decode('utf-8'))
                 if data.get("code") == "Ok" and "distances" in data and "durations" in data:
@@ -73,7 +73,7 @@ class RoutingService:
             if not RoutingService._external_routing_enabled():
                 raise RuntimeError("External routing is disabled by configuration.")
             url = f"https://router.project-osrm.org/route/v1/driving/{origin_lon:.6f},{origin_lat:.6f};{dest_lon:.6f},{dest_lat:.6f}?overview=full&geometries=geojson"
-            req = urllib.request.Request(url, headers={'User-Agent': 'ArogyaSetu-BBSR-Hospital-Recommender/1.0'})
+            req = urllib.request.Request(url, headers={'User-Agent': 'Arogya-BBSR-Hospital-Recommender/1.0'})
             with urllib.request.urlopen(req, timeout=timeout_sec) as resp:
                 data = json.loads(resp.read().decode('utf-8'))
                 if data.get("code") == "Ok" and "routes" in data and len(data["routes"]) > 0:

@@ -1,5 +1,6 @@
 import React from 'react';
 import { IconHospital, IconDatabase, IconBed } from './Icons';
+import ArogyaLogo from './ArogyaLogo';
 
 export default function Sidebar({
   isOpen,
@@ -64,13 +65,13 @@ export default function Sidebar({
           isDarkMode ? 'bg-[#18181B] border-[#2D2D34]' : 'bg-[#F8FAFC] border-[#E2E8F0]'
         }`}>
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 rounded-2xl bg-blue-600 flex items-center justify-center text-white shadow-md font-black text-lg">
-              A
+            <div className="w-10 h-10 rounded-2xl bg-emerald-50 dark:bg-emerald-950/50 flex items-center justify-center shadow-md">
+              <ArogyaLogo className="w-8 h-8" />
             </div>
             <div>
               <div className="flex items-center gap-1.5">
                 <span className={`font-black text-base leading-tight ${isDarkMode ? 'text-white' : 'text-[#0F172A]'}`}>
-                  ArogyaSetu
+                  Arogya
                 </span>
                 <span className={`text-[10px] font-black px-1.5 py-0.5 rounded ${
                   isDarkMode ? 'bg-blue-900/60 text-blue-200' : 'bg-blue-100 text-blue-800'

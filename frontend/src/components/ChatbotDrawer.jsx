@@ -1,14 +1,15 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { IconChat, IconCross, IconSend, IconBot, IconShield } from './Icons';
+import ArogyaLogo from './ArogyaLogo';
 
 export default function ChatbotDrawer({ isDarkMode }) {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([
     {
       sender: 'bot',
-      text: "Hello! I am your **Arogya Setu Assistant**.\n\nAsk me anything about emergency symptoms, hospital rankings, 30-minute bed holds, PM-JAY cashless status, or healthcare across Bhubaneswar.",
+      text: "Hello! I am your **Arogya Assistant**.\n\nAsk me anything about emergency symptoms, hospital rankings, 30-minute bed holds, PM-JAY cashless status, or healthcare across Bhubaneswar.",
       mode: 'ai',
-      provider: 'Arogya Setu Assistant'
+      provider: 'Arogya Assistant'
     }
   ]);
   const [inputText, setInputText] = useState('');
@@ -55,7 +56,7 @@ export default function ChatbotDrawer({ isDarkMode }) {
           sender: 'bot',
           text: "I encountered a connection issue. Hospitals are scored using: **Score = 1000 * Rating - Fee - Distance (km)**. For urgent emergencies, dial **108** immediately.",
           mode: 'ai',
-          provider: 'Arogya Setu Assistant'
+          provider: 'Arogya Assistant'
         }
       ]);
     } finally {
@@ -68,7 +69,7 @@ export default function ChatbotDrawer({ isDarkMode }) {
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="fixed bottom-6 right-6 z-40 bg-blue-600 hover:bg-blue-700 text-white p-3.5 sm:p-4 rounded-2xl shadow-2xl flex items-center justify-center transition-transform hover:scale-110 active:scale-95"
-        title="Open Arogya Setu Assistant"
+        title="Open Arogya Assistant"
       >
         <IconChat className="w-6 h-6" />
         <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-emerald-500 border-2 border-white rounded-full"></span>
@@ -82,12 +83,12 @@ export default function ChatbotDrawer({ isDarkMode }) {
             isDarkMode ? 'bg-[#141416] border-[#2E2F34]' : 'bg-[#F4F1EA] border-[#E7E4DC]'
           }`}>
             <div className="flex items-center space-x-2.5">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center font-bold text-white shadow-sm">
-                AI
+              <div className="w-9 h-9 rounded-xl bg-emerald-50 dark:bg-emerald-950/50 flex items-center justify-center shadow-sm">
+                <ArogyaLogo className="w-7 h-7" />
               </div>
               <div>
                 <h4 className="text-sm font-bold tracking-tight">
-                  Arogya Setu Assistant
+                  Arogya Assistant
                 </h4>
                 <div className="flex items-center space-x-1 text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block animate-pulse"></span>

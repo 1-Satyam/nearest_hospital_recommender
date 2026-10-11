@@ -99,7 +99,7 @@ export default function HoldPassView({
   } = holdData;
 
   const whatsappMessage = encodeURIComponent(
-    `*Arogya Setu Bhubaneswar - Emergency Bed Hold Confirmation*\n\n` +
+    `*Arogya - Bhubaneswar Emergency Bed Hold Confirmation*\n\n` +
     `*Patient:* ${patient_name || 'Ramesh'}\n` +
     `*Hospital:* ${hospital_name}\n` +
     `*Department:* ${specialty}\n` +
