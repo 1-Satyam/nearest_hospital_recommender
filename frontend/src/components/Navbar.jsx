@@ -54,18 +54,18 @@ export default function Navbar({
       )}
 
       {/* 2. Bhubaneswar Bed Registry (Restored on Top Part) */}
-      <div className={`text-[11px] py-1.5 px-4 border-b overflow-x-auto no-scrollbar transition-colors ${
+      <div className={`text-[11px] py-1.5 px-3 sm:px-4 border-b transition-colors ${
         isDarkMode ? 'bg-[#0F192A] border-[#29364A] text-slate-200' : 'bg-slate-50 border-[#D8E1EE] text-slate-700'
       }`}>
-        <div className="max-w-7xl mx-auto flex items-center justify-between whitespace-nowrap min-w-max">
-          <div className="flex items-center space-x-3 sm:space-x-4">
+        <div className="max-w-7xl mx-auto w-full flex flex-wrap sm:flex-nowrap items-center justify-between gap-x-3 gap-y-1">
+          <div className="flex flex-wrap items-center gap-x-2 sm:gap-x-4">
             <span className="font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider text-[10px]">Bhubaneswar Bed Registry:</span>
             <span>Coverage: <b className={isDarkMode ? 'text-white' : 'text-stone-900'}>21 Hospitals</b></span>
-            <span className="text-stone-400">&bull;</span>
+            <span className="hidden sm:inline text-stone-400">&bull;</span>
             <span>Emergency: <b className="text-emerald-600 dark:text-emerald-400">84 Live</b></span>
-            <span className="text-stone-400">&bull;</span>
+            <span className="hidden sm:inline text-stone-400">&bull;</span>
             <span>General Ward: <b className="text-blue-600 dark:text-blue-400">809 Free</b></span>
-            <span className="text-stone-400">&bull;</span>
+            <span className="hidden sm:inline text-stone-400">&bull;</span>
             <span>PM-JAY: <b className="text-amber-600 dark:text-amber-400">17 Empanelled</b></span>
           </div>
           <div className="hidden sm:flex items-center space-x-2 pl-4">
@@ -76,10 +76,10 @@ export default function Navbar({
       </div>
 
       {/* 3. Main Navigation Bar */}
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-15 sm:h-16 gap-2">
+      <div className="max-w-7xl mx-auto w-full px-2 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-15 sm:h-16 gap-1 sm:gap-2">
           {/* Left: Hamburger Button + ArogyaSetu Logo */}
-          <div className="flex items-center space-x-2.5 sm:space-x-3.5">
+          <div className="flex min-w-0 items-center space-x-1.5 sm:space-x-3.5">
             <button
               onClick={onToggleSidebar}
               className={`p-2 rounded-xl border transition-all ${
@@ -97,7 +97,7 @@ export default function Navbar({
               className="flex items-center space-x-2.5 cursor-pointer" 
               onClick={() => setActiveTab('gateway')}
             >
-              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 flex items-center justify-center text-white shadow-md shadow-blue-500/20">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-2xl bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 flex items-center justify-center text-white shadow-md shadow-blue-500/20 shrink-0">
                 <IconHospital className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
               </div>
               <div className="flex flex-col">
@@ -107,7 +107,7 @@ export default function Navbar({
                   }`}>
                     Arogya<span className="text-blue-600 font-extrabold">Setu</span>
                   </span>
-                  <span className="text-[10px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-blue-500/10 text-blue-600 border border-blue-500/20">
+                  <span className="hidden sm:inline text-[10px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-blue-500/10 text-blue-600 border border-blue-500/20">
                     BBSR
                   </span>
                 </div>
@@ -119,10 +119,10 @@ export default function Navbar({
           </div>
 
           {/* Right: Origin Location, Day/Night Squircle, Sign In */}
-          <div className="flex items-center space-x-2 sm:space-x-3">
+          <div className="flex shrink-0 items-center space-x-1.5 sm:space-x-3">
             <button
               onClick={onOpenLocationModal}
-              className={`flex items-center space-x-1.5 text-xs font-bold px-3 py-1.5 rounded-xl border transition ${
+              className={`flex items-center space-x-1.5 text-xs font-bold px-2 sm:px-3 py-1.5 rounded-xl border transition ${
                 userLocation?.isLiveGPS
                   ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-600 hover:bg-emerald-500/20'
                   : isDarkMode
@@ -137,7 +137,10 @@ export default function Navbar({
                   <span className="absolute -top-1 -right-1 w-2 h-2 bg-emerald-500 rounded-full animate-ping"></span>
                 )}
               </div>
-              <span className="max-w-[100px] sm:max-w-[150px] truncate">{userLocation?.name || 'Set Location'}</span>
+              <span className="max-w-[44px] sm:max-w-[150px] truncate">
+                <span className="sm:hidden">{userLocation?.isLiveGPS ? 'GPS' : 'Location'}</span>
+                <span className="hidden sm:inline">{userLocation?.name || 'Set Location'}</span>
+              </span>
               <span className="text-[10px] text-stone-400">&#9662;</span>
             </button>
 

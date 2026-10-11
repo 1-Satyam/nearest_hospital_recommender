@@ -22,7 +22,7 @@ export default function MapComponent({
 
       const map = window.L.map(mapContainerRef.current, {
         zoomControl: true,
-        scrollWheelZoom: true
+        scrollWheelZoom: false
       }).setView([initialLat, initialLon], 13);
 
       window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -77,7 +77,7 @@ export default function MapComponent({
 
       const markerHtml = `
         <div style="transform:${scale};transition:all 0.2s;display:flex;align-items:center;justify-content:center;width:30px;height:30px;background:${bgColor};color:white;font-weight:800;font-size:12px;border-radius:50%;border:${border};box-shadow:0 4px 10px rgba(0,0,0,0.25);">
-          ${h.rank}
+          ${isInTopN ? h.selection_rank : h.rank}
         </div>
       `;
 
@@ -93,7 +93,7 @@ export default function MapComponent({
         .bindPopup(`
           <div style="font-family:sans-serif;font-size:12px;min-width:200px;">
             <div style="font-weight:800;font-size:13px;color:#0f172a;margin-bottom:2px;">
-              #${h.rank} ${h.hospital_name}
+              ${isInTopN ? `Top N pick #${h.selection_rank} · ` : ''}#${h.rank} ${h.hospital_name}
             </div>
             <div style="color:#2563eb;font-weight:700;margin-bottom:4px;">
               ${h.is_real_road ? '' : '~'}${h.road_distance_km || h.distance_km} km (${h.is_real_road ? '' : '~'}${h.eta_minutes || Math.round(h.distance_km * 2.2)} mins ETA${h.is_real_road ? '' : ', estimate'})
@@ -119,6 +119,19 @@ export default function MapComponent({
       markersRef.current.push(marker);
     });
   }, [hospitals, userLocation, selectedHospital, onSelectHospital]);
+
+  useEffect(() => {
+    const container = mapContainerRef.current;
+    const map = mapInstanceRef.current;
+    if (!container || !map || typeof ResizeObserver === 'undefined') return undefined;
+
+    const observer = new ResizeObserver(() => {
+      map.invalidateSize({ pan: false });
+    });
+    observer.observe(container);
+
+    return () => observer.disconnect();
+  }, []);
 
   useEffect(() => {
     const map = mapInstanceRef.current;

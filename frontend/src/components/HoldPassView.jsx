@@ -7,6 +7,7 @@ export default function HoldPassView({
   onDone,
   onClose,
   onBack,
+  onOpenInNewTab,
   onHoldUpdate,
   isDarkMode
 }) {
@@ -161,6 +162,16 @@ export default function HoldPassView({
             <span>{status === 'HELD' ? formatTimer(remainingSeconds) : status}</span>
           </div>
         </div>
+
+        <button
+          type="button"
+          onClick={onOpenInNewTab}
+          className={`w-full rounded-xl border py-2.5 text-xs font-black transition ${
+            isDarkMode ? 'border-blue-500/50 text-blue-300 hover:bg-blue-500/10' : 'border-blue-200 text-blue-700 hover:bg-blue-50'
+          }`}
+        >
+          Open Pass in New Tab
+        </button>
 
         <div className="grid grid-cols-2 gap-3 text-xs">
           <div className={`p-3.5 rounded-2xl border ${

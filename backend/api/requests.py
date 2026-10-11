@@ -10,6 +10,7 @@ import secrets
 import sqlite3
 from db.database import get_connection
 from api.auth import get_current_user
+from data_engine.loader import load_hospitals
 
 router = APIRouter(prefix="/api/requests", tags=["requests"])
 logger = logging.getLogger(__name__)
@@ -463,13 +464,26 @@ def get_request_status(request_id: str, user=Depends(get_current_user)):
             raise HTTPException(status_code=404, detail="Request not found.")
         status = _expire_hold_if_needed(cur, row, datetime.now(timezone.utc))
         conn.commit()
-        expires_at = row["hold_expires_at"]
+        hospitals = load_hospitals()
+        hospital_rows = hospitals[
+            hospitals["hospital_id"].astype(str).str.strip() == str(row["hospital_id"])
+        ]
+        hospital = hospital_rows.iloc[0] if not hospital_rows.empty else None
         return {
             "request_id": row["id"],
             "status": status,
-            "hold_expires_at": expires_at,
+            "hold_expires_at": row["hold_expires_at"],
             "flow_type": row["flow_type"],
             "hospital_id": row["hospital_id"],
+            "hospital_name": str(hospital["hospital_name"]) if hospital is not None else row["hospital_id"],
+            "admission_fee_inr": int(hospital.get("admission_fee_inr", 0)) if hospital is not None else 0,
+            "specialty": row["specialty"],
+            "bed_unit_id": row["bed_unit_id"],
+            "doctor_incharge": row["doctor_incharge"],
+            "desk_location": row["desk_location"],
+            "hospital_desk_contact": str(hospital.get("contact_phone", "")) if hospital is not None else "",
+            "patient_name": row["patient_name"],
+            "directions_url": str(hospital.get("directions_url", "")) if hospital is not None else "",
         }
     finally:
         conn.close()

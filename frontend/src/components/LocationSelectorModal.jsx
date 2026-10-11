@@ -134,7 +134,7 @@ export default function LocationSelectorModal({
             </div>
             <div>
               <h3 className={`font-black text-base leading-snug ${isDarkMode ? 'text-white' : 'text-[#0F172A]'}`}>
-                Select Patient Origin Location
+                Set Location
               </h3>
               <p className={`text-xs font-bold mt-0.5 ${isDarkMode ? 'text-stone-400' : 'text-slate-500'}`}>
                 Estimated distance and ETA update from here; map routes may be approximate
@@ -196,7 +196,7 @@ export default function LocationSelectorModal({
             ) : (
               <>
                 <IconMapPin className="w-4 h-4 text-blue-500" />
-                <span>Use My Live Device GPS</span>
+                <span>Live Location (GPS)</span>
               </>
             )}
           </button>

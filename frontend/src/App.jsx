@@ -2,6 +2,7 @@ import React, { useState, useEffect, useLayoutEffect, useMemo } from 'react';
 import Navbar from './components/Navbar';
 import Sidebar from './components/Sidebar';
 import TopNSlider from './components/TopNSlider';
+import TopNSortControls from './components/TopNSortControls';
 import HospitalCard from './components/HospitalCard';
 import MapComponent from './components/MapComponent';
 import ComparisonTable from './components/ComparisonTable';
@@ -14,10 +15,12 @@ import LocationSelectorModal from './components/LocationSelectorModal';
 import AuthModal from './components/AuthModal';
 import ChatbotDrawer from './components/ChatbotDrawer';
 import { IconAlert, IconBed, IconShield, IconSearch, IconCheck, IconArrowRight, IconMapPin } from './components/Icons';
+import { HOSPITAL_SORT_DEFAULTS, sortHospitals } from './utils/hospitalSorting';
 
 const latestActiveHold = (ledger) => [...ledger].reverse().find((hold) => hold.status === 'HELD') || null;
 
 export default function App() {
+  const requestedHoldId = new URLSearchParams(window.location.search).get('hold_id');
   useEffect(() => {
     const handleReset = () => {
       setActiveHoldPass(null);
@@ -77,13 +80,15 @@ export default function App() {
   const [hospitals, setHospitals] = useState([]);
   const [specialtiesList, setSpecialtiesList] = useState([]);
   const [topN, setTopN] = useState(10);
+  const [topNSortKey, setTopNSortKey] = useState('recommended');
+  const [topNSortDirection, setTopNSortDirection] = useState('asc');
   const [selectedSpecialty, setSelectedSpecialty] = useState('');
   const [pmjayOnly, setPmjayOnly] = useState(false);
   const [emergencyOnly, setEmergencyOnly] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('gateway');
+  const [activeTab, setActiveTab] = useState(() => requestedHoldId ? 'hold_pass' : 'gateway');
   const [selectedHospital, setSelectedHospital] = useState(null);
 
   const [showAuthModal, setShowAuthModal] = useState(false);
@@ -92,6 +97,9 @@ export default function App() {
   const [emergencyModalHospital, setEmergencyModalHospital] = useState(null);
   const [holdLedger, setHoldLedger] = useState([]);
   const [activeHoldPass, setActiveHoldPass] = useState(null);
+  const [accountReady, setAccountReady] = useState(false);
+  const [holdPassLoading, setHoldPassLoading] = useState(Boolean(requestedHoldId));
+  const [holdPassError, setHoldPassError] = useState('');
   const [loading, setLoading] = useState(true);
 
   const recordHoldUpdate = (holdInfo) => {
@@ -111,6 +119,7 @@ export default function App() {
         const response = await fetch('/api/auth/me');
         const account = await response.json();
         if (!response.ok) throw new Error(account.detail || 'Could not validate your sign-in session.');
+        if (!cancelled) setAccountReady(true);
         if (!account.user) {
           if (!cancelled) {
             setUser(null);
@@ -131,7 +140,10 @@ export default function App() {
         }));
         setHoldLedger(nextLedger);
       } catch (error) {
-        if (!cancelled) console.error('Could not load signed-in account data:', error);
+        if (!cancelled) {
+          setAccountReady(true);
+          console.error('Could not load signed-in account data:', error);
+        }
       }
     };
     loadAccount();
@@ -139,6 +151,40 @@ export default function App() {
       cancelled = true;
     };
   }, []);
+
+  useEffect(() => {
+    if (!requestedHoldId || !accountReady) return undefined;
+    if (!user) {
+      setHoldPassLoading(false);
+      setHoldPassError('Sign in to view this bed-hold pass.');
+      return undefined;
+    }
+
+    let cancelled = false;
+    setHoldPassLoading(true);
+    setHoldPassError('');
+    fetch(`/api/requests/${encodeURIComponent(requestedHoldId)}`)
+      .then(async (response) => {
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.detail || 'Could not load this bed-hold pass.');
+        if (cancelled) return;
+        setActiveHoldPass(data);
+        setHoldLedger((current) => [
+          ...current.filter((hold) => hold.request_id !== data.request_id),
+          data
+        ]);
+      })
+      .catch((error) => {
+        if (!cancelled) setHoldPassError(error.message || 'Could not load this bed-hold pass.');
+      })
+      .finally(() => {
+        if (!cancelled) setHoldPassLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [requestedHoldId, accountReady, user]);
 
   useEffect(() => {
     if (!hospitals.length) return;
@@ -157,11 +203,15 @@ export default function App() {
   useEffect(() => {
     setActiveHoldPass((current) => {
       const refreshedCurrent = current && holdLedger.find((hold) => hold.request_id === current.request_id);
-      return refreshedCurrent?.status === 'HELD' ? refreshedCurrent : latestActiveHold(holdLedger);
+      return refreshedCurrent || latestActiveHold(holdLedger);
     });
   }, [holdLedger]);
 
   const [filterCardsToTopN, setFilterCardsToTopN] = useState(true);
+  const handleTopNSortKeyChange = (key) => {
+    setTopNSortKey(key);
+    if (HOSPITAL_SORT_DEFAULTS[key]) setTopNSortDirection(HOSPITAL_SORT_DEFAULTS[key]);
+  };
   const handleTopNChange = (value) => {
     setTopN(value);
     setFilterCardsToTopN(true);
@@ -332,8 +382,35 @@ export default function App() {
     return filtered;
   }, [hospitals, searchQuery, normalizedSpecialty, emergencyOnly, pmjayOnly]);
 
-  const visibleHospitals = filterCardsToTopN ? displayedHospitals.slice(0, Number(topN) || 10) : displayedHospitals;
-  const mapHospitals = visibleHospitals.length ? visibleHospitals : displayedHospitals.length ? displayedHospitals : hospitals;
+  const topNSortedHospitals = useMemo(
+    () => sortHospitals(displayedHospitals, topNSortKey, topNSortDirection),
+    [displayedHospitals, topNSortKey, topNSortDirection]
+  );
+  const topNCount = Number(topN) || 10;
+  const topNHospitalIds = useMemo(
+    () => new Set(topNSortedHospitals.slice(0, topNCount).map((hospital) => hospital.hospital_id)),
+    [topNSortedHospitals, topNCount]
+  );
+  const orderedHospitals = useMemo(
+    () => topNSortedHospitals.map((hospital, index) => ({
+      ...hospital,
+      selection_rank: index + 1,
+      is_in_top_n: topNHospitalIds.has(hospital.hospital_id)
+    })),
+    [topNSortedHospitals, topNHospitalIds]
+  );
+  const visibleHospitals = filterCardsToTopN
+    ? orderedHospitals.slice(0, topNCount)
+    : orderedHospitals;
+  const mapHospitals = visibleHospitals.length
+    ? visibleHospitals
+    : displayedHospitals.length
+      ? orderedHospitals
+      : hospitals;
+
+  useEffect(() => {
+    setSelectedHospital(topNSortedHospitals[0] || null);
+  }, [topNSortKey, topNSortDirection, topNSortedHospitals]);
 
   return (
     <div className={`min-h-screen flex flex-col transition-colors duration-200 ${
@@ -393,18 +470,18 @@ export default function App() {
                 </div>
                 <div>
                   <div className="text-xs sm:text-sm font-bold flex items-center gap-2">
-                    <span className={isDarkMode ? 'text-stone-400' : 'text-stone-500'}>Triage Location:</span>
+                    <span className={isDarkMode ? 'text-stone-400' : 'text-stone-500'}>Finding hospitals near:</span>
                     <span className={`font-black ${userLocation.isLiveGPS ? 'text-emerald-500' : 'text-blue-600'}`}>
-                      {userLocation.name}
+                      {userLocation.isLiveGPS ? 'Your current location' : userLocation.name}
                     </span>
                     {userLocation.isLiveGPS && (
                       <span className="bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-[10px] font-black px-2 py-0.5 rounded-full uppercase">
-                        GPS Active
+                        Using GPS
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-stone-500 dark:text-stone-400 mt-0.5 font-mono">
-                    {userLocation.lat.toFixed(4)} N, {userLocation.lon.toFixed(4)} E &bull; Calculating nearest road distance
+                  <p className="text-xs text-stone-500 dark:text-stone-400 mt-0.5">
+                    Hospital distances are estimated from this location
                   </p>
                 </div>
               </div>
@@ -597,13 +674,49 @@ export default function App() {
         {activeTab === 'hold_pass' && activeHoldPass && (
           <HoldPassView
             holdData={activeHoldPass}
+            onOpenInNewTab={() => {
+              const passUrl = new URL(window.location.href);
+              passUrl.searchParams.set('hold_id', activeHoldPass.request_id);
+              window.open(passUrl.toString(), '_blank', 'noopener,noreferrer');
+            }}
             onReset={() => {
               setActiveHoldPass(null);
+              setHoldPassError('');
+              const portalUrl = new URL(window.location.href);
+              portalUrl.searchParams.delete('hold_id');
+              window.history.replaceState({}, '', `${portalUrl.pathname}${portalUrl.search}${portalUrl.hash}`);
               setActiveTab('explore');
             }}
             onHoldUpdate={recordHoldUpdate}
             isDarkMode={isDarkMode}
           />
+        )}
+        {activeTab === 'hold_pass' && !activeHoldPass && (
+          <div className={`max-w-xl mx-auto rounded-2xl border p-6 text-center ${
+            isDarkMode ? 'bg-[#111C2E] border-[#29364A]' : 'bg-white border-[#D8E1EE]'
+          }`}>
+            {holdPassLoading ? (
+              <p role="status">Loading bed-hold pass…</p>
+            ) : (
+              <>
+                <p role="alert" className="font-semibold text-red-600">
+                  {holdPassError || 'This bed-hold pass is unavailable.'}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const portalUrl = new URL(window.location.href);
+                    portalUrl.searchParams.delete('hold_id');
+                    window.history.replaceState({}, '', `${portalUrl.pathname}${portalUrl.search}${portalUrl.hash}`);
+                    setActiveTab('explore');
+                  }}
+                  className="mt-4 rounded-xl bg-blue-600 px-4 py-2 text-sm font-bold text-white hover:bg-blue-700"
+                >
+                  Return to Portal
+                </button>
+              </>
+            )}
+          </div>
         )}
 
         {activeTab === 'explore' && (
@@ -653,30 +766,55 @@ export default function App() {
             </div>
 
             <TopNSlider topN={topN} setTopN={handleTopNChange} totalCount={hospitals.length} isDarkMode={isDarkMode} />
+            <TopNSortControls
+              sortKey={topNSortKey}
+              direction={topNSortDirection}
+              onSortKeyChange={handleTopNSortKeyChange}
+              onDirectionToggle={() => setTopNSortDirection((direction) => direction === 'asc' ? 'desc' : 'asc')}
+              isDarkMode={isDarkMode}
+            />
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-              <div className="lg:col-span-7 space-y-4">
-                <div className={`flex items-center justify-between text-xs px-1 ${isDarkMode ? 'text-slate-300' : 'text-slate-600'}`}>
-                  <div className="flex items-center justify-between flex-wrap gap-2 w-full">
-                    <span>
-                      Showing <b>{visibleHospitals.length}</b> of all <b>{hospitals.length || displayedHospitals.length || 0}</b> hospitals relative to <b>{userLocation.name}</b>
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => setFilterCardsToTopN(!filterCardsToTopN)}
-                      className={`text-xs font-bold px-3 py-1 rounded-xl border transition shadow-sm ${
-                        isDarkMode
-                          ? 'border-blue-800 bg-blue-950/50 text-blue-300 hover:bg-blue-900/60'
-                          : 'border-blue-300 bg-blue-50 text-blue-800 hover:bg-blue-100'
-                      }`}
-                    >
-                      {filterCardsToTopN ? `Show All ${hospitals.length || displayedHospitals.length || 0} Hospitals` : `Filter to Top ${topN} Only`}
-                    </button>
-                  </div>
-                  <span className="text-[11px]">Score = 1000 * Rating - Fee - Dist</span>
+            <div className="space-y-6">
+              <section className={`relative z-0 isolate mx-auto w-[94%] p-3 rounded-2xl border shadow-sm space-y-2 ${
+                isDarkMode ? 'bg-[#111C2E] border-[#29364A]' : 'bg-white border-[#D8E1EE]'
+              }`}>
+                <div className={`flex items-center justify-between px-2 pt-1 text-xs font-bold ${
+                  isDarkMode ? 'text-white' : 'text-[#1C1917]'
+                }`}>
+                  <span>Interactive Map (Bhubaneswar)</span>
+                  <span className="text-blue-500 truncate max-w-[60%] text-right">
+                    {selectedHospital ? `#${selectedHospital.rank} ${selectedHospital.hospital_name}` : ''}
+                  </span>
+                </div>
+                <div className="h-[340px] sm:h-[480px]">
+                  <MapComponent
+                    hospitals={mapHospitals}
+                    userLocation={userLocation}
+                    selectedHospital={selectedHospital}
+                    onSelectHospital={h => setSelectedHospital(h)}
+                  />
+                </div>
+              </section>
+
+              <section className="space-y-4">
+                <div className={`flex flex-wrap items-center gap-3 text-xs px-1 ${isDarkMode ? 'text-slate-300' : 'text-slate-600'}`}>
+                  <span>
+                    Showing <b>{visibleHospitals.length}</b> of all <b>{hospitals.length || displayedHospitals.length || 0}</b> hospitals relative to <b>{userLocation.name}</b>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setFilterCardsToTopN(!filterCardsToTopN)}
+                    className={`ml-auto shrink-0 text-xs font-bold px-3 py-1.5 rounded-xl border transition shadow-sm ${
+                      isDarkMode
+                        ? 'border-blue-800 bg-blue-950/50 text-blue-300 hover:bg-blue-900/60'
+                        : 'border-blue-300 bg-blue-50 text-blue-800 hover:bg-blue-100'
+                    }`}
+                  >
+                    {filterCardsToTopN ? `Show All ${hospitals.length || displayedHospitals.length || 0} Hospitals` : `Filter to Top ${topN} Only`}
+                  </button>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
                   {visibleHospitals.map(hospital => (
                     <HospitalCard
                       key={hospital.hospital_id}
@@ -696,29 +834,7 @@ export default function App() {
                     />
                   ))}
                 </div>
-              </div>
-
-              <div className="lg:col-span-5 sticky top-20 sm:top-24">
-                <div className={`p-3 rounded-2xl border shadow-sm space-y-2 ${
-                  isDarkMode ? 'bg-[#111C2E] border-[#29364A]' : 'bg-white border-[#D8E1EE]'
-                }`}>
-                  <div className={`flex items-center justify-between px-2 pt-1 text-xs font-bold ${
-                    isDarkMode ? 'text-white' : 'text-[#1C1917]'
-                  }`}>
-                    <span>Interactive Map (Bhubaneswar)</span>
-                    <span className="text-blue-500 truncate max-w-[180px]">
-                      {selectedHospital ? `#${selectedHospital.rank} ${selectedHospital.hospital_name}` : ''}
-                    </span>
-                  </div>
-                  <div className="h-[340px] sm:h-[480px]">
-                    <MapComponent hospitals={mapHospitals}
-                      userLocation={userLocation}
-                      selectedHospital={selectedHospital}
-                      onSelectHospital={h => setSelectedHospital(h)}
-                    />
-                  </div>
-                </div>
-              </div>
+              </section>
             </div>
           </div>
         )}

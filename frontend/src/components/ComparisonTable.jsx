@@ -1,7 +1,37 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import { IconStar, IconMapPin, IconShield, IconBed, IconNavigation } from './Icons';
 import { getGeneralWardVacancyPercent, isHospitalPmjayEmpanelled } from '../utils/hospitalMetrics';
 import { getHospitalWebsite } from '../utils/hospitalWebsites';
+import { HOSPITAL_SORT_DEFAULTS, getHospitalSortValue } from '../utils/hospitalSorting';
+
+function SortableHeader({ column, activeSort, onSort, isDarkMode, children }) {
+  const isActive = activeSort?.key === column;
+  const direction = isActive ? activeSort.direction : HOSPITAL_SORT_DEFAULTS[column];
+  const arrow = isActive ? (direction === 'asc' ? '▲' : '▼') : '↕';
+
+  return (
+    <th
+      aria-sort={isActive ? (direction === 'asc' ? 'ascending' : 'descending') : 'none'}
+      className="py-3 px-4"
+    >
+      <button
+        type="button"
+        onClick={() => onSort(column)}
+        aria-label={`Sort by ${column === 'ratingReviews' ? 'rating multiplied by review count' : column}`}
+        className={`inline-flex items-center gap-1 text-left transition-colors ${
+          isActive
+            ? 'text-blue-700 dark:text-blue-300'
+            : isDarkMode
+              ? 'hover:text-white'
+              : 'hover:text-blue-700'
+        }`}
+      >
+        <span>{children}</span>
+        <span aria-hidden="true" className="text-[10px]">{arrow}</span>
+      </button>
+    </th>
+  );
+}
 
 export default function ComparisonTable({
   hospitals = [],
@@ -12,7 +42,31 @@ export default function ComparisonTable({
   onRequestGeneralWard,
   isDarkMode
 }) {
-  const tableData = hospitals.slice(0, 10);
+  const [activeSort, setActiveSort] = useState(null);
+  const tableData = useMemo(() => {
+    const data = hospitals.slice(0, 10);
+    if (!activeSort) return data;
+
+    const direction = activeSort.direction === 'asc' ? 1 : -1;
+    return data.sort((left, right) => {
+      const leftValue = getHospitalSortValue(left, activeSort.key);
+      const rightValue = getHospitalSortValue(right, activeSort.key);
+      if (leftValue === null && rightValue === null) return left.rank - right.rank;
+      if (leftValue === null) return 1;
+      if (rightValue === null) return -1;
+      const difference = (leftValue - rightValue) * direction;
+      return difference || left.rank - right.rank;
+    });
+  }, [hospitals, activeSort]);
+
+  const handleSort = (key) => {
+    setActiveSort((current) => ({
+      key,
+      direction: current?.key === key
+        ? (current.direction === 'asc' ? 'desc' : 'asc')
+        : HOSPITAL_SORT_DEFAULTS[key]
+    }));
+  };
 
   return (
     <div className={`rounded-3xl border shadow-sm overflow-hidden transition-colors ${
@@ -44,10 +98,10 @@ export default function ComparisonTable({
               <th className="py-3 px-4">Rank</th>
               <th className="py-3 px-4">Hospital Name</th>
               <th className="py-3 px-4">Gradient Boosting · 24h</th>
-              <th className="py-3 px-4">Road Distance</th>
-              <th className="py-3 px-4">Admission Fee</th>
-              <th className="py-3 px-4">Rating / Reviews</th>
-              <th className="py-3 px-4">Bed Vacancy</th>
+              <SortableHeader column="distance" activeSort={activeSort} onSort={handleSort} isDarkMode={isDarkMode}>Road Distance</SortableHeader>
+              <SortableHeader column="fee" activeSort={activeSort} onSort={handleSort} isDarkMode={isDarkMode}>Admission Fee</SortableHeader>
+              <SortableHeader column="ratingReviews" activeSort={activeSort} onSort={handleSort} isDarkMode={isDarkMode}>Rating × Reviews</SortableHeader>
+              <SortableHeader column="vacancy" activeSort={activeSort} onSort={handleSort} isDarkMode={isDarkMode}>Bed Vacancy</SortableHeader>
               <th className="py-3 px-4">PM-JAY Scheme</th>
               <th className="py-3 px-4">Official Website</th>
               <th className="py-3 px-4 text-right">Actions</th>
@@ -119,7 +173,7 @@ export default function ComparisonTable({
                       <IconStar className="w-3.5 h-3.5 fill-amber-400 text-amber-400" />
                       <span>{h.rating_5}</span>
                     </div>
-                    <div className="text-[10px] text-stone-400">({h.review_count || 120} reviews)</div>
+                    <div className="text-[10px] text-stone-400">({h.review_count ?? h.rating_count ?? 0} reviews)</div>
                   </td>
 
                   <td className="py-3.5 px-4 whitespace-nowrap">

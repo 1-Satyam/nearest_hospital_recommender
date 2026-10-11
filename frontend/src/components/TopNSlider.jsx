@@ -13,14 +13,14 @@ export default function TopNSlider({ topN, setTopN, totalCount = 10, isDarkMode 
         <div>
           <div className="flex items-center gap-2">
             <h4 className="font-bold text-sm text-stone-900 dark:text-stone-100">
-              Mentor Ranking Recommendation
+              Hospital Recommendations
             </h4>
             <span className="bg-blue-600 text-white text-xs font-extrabold px-2 py-0.5 rounded-lg shadow-sm">
               Top {topN}
             </span>
           </div>
           <p className="text-xs text-stone-400 mt-0.5">
-            Displaying Top {topN} recommendations in feed. Map and table matrix retain all {totalCount} facilities.
+            Choose how many hospitals to show in the list and on the map. There are {totalCount} hospitals to choose from.
           </p>
         </div>
 
