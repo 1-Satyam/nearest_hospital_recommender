@@ -126,4 +126,4 @@ Production booking remains disabled until SMS OTP delivery is integrated. See [d
 
 ## Contributing
 
-Contributions should preserve the distinction between reported inventory, synthetic forecast estimates, and confirmed hospital data. Run the backend tests and frontend build before submitting changes. Never commit `.env` files, database files, staff tokens, API keys, or other credentials.
+Contributions should preserve the distinction between reported inventory, synthetic forecast estimates, and confirmed hospital data. Run the backend tests and frontend build before submitting changes. 
