@@ -22,7 +22,7 @@ ArogyaSetu is a hospital discovery and bed-request demonstration for Bhubaneswar
 | Data and forecasting | CSV, pandas, NumPy, scikit-learn |
 | Persistence | SQLite |
 
-## Run locally
+## Run localy
 
 ### Prerequisites
 
