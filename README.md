@@ -4,6 +4,10 @@ ArogyaSetu is a hospital discovery and bed-request demonstration for Bhubaneswar
 
 > **Demonstration project:** Hospital inventory is CSV-backed, and the 24-hour Gradient Boosting forecast is trained on synthetic data. Neither is a live hospital feed or a confirmed reservation. In production mode, new bookings are intentionally unavailable until an SMS OTP provider is configured.
 
+## Project Objective
+
+The objective of ArogyaSetu is to simplify hospital discovery by providing users with accessible information about nearby healthcare facilities. The platform demonstrates how hospital comparisons, reported bed availability, location-based recommendations, and a structured bed-request process can be integrated into a single application.
+
 ## What it does
 
 - Lists and ranks hospitals using location, distance, fees, ratings, bed availability, specialties, emergency readiness, and PM-JAY status.
