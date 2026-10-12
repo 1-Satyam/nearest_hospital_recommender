@@ -18,7 +18,7 @@ ArogyaSetu is a hospital discovery and bed-request demonstration for Bhubaneswar
 
 | Layer | Technologies |
 | --- | --- |
-| Frontend | React, Vite, Tailwind CSS, Leaflet |
+| Frontend | React,Tailwind CSS, HTML,Leaflet |
 | API | Python, FastAPI, Pydantic |
 | Data and forecasting | CSV, pandas, NumPy, scikit-learn |
 | Persistence | SQLite |
