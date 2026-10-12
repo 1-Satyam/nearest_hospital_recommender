@@ -226,6 +226,17 @@ class TestHospitalAPI(unittest.TestCase):
         data = res.json()
         self.assertEqual(data["total_displayed"], 10)
         self.assertEqual(sum(1 for h in data["hospitals"] if h["is_in_top_n"]), 5)
+        hospitals = data["hospitals"]
+        scores = [hospital["score"] for hospital in hospitals]
+        self.assertEqual(scores, sorted(scores, reverse=True))
+        sample = hospitals[0]
+        expected_score = (
+            sample["availability_pct"] * 100
+            + sample["rating_5"] * sample["review_count"]
+            - sample["distance_km"]
+            - sample["admission_fee_inr"]
+        )
+        self.assertAlmostEqual(sample["score"], expected_score)
 
     def test_hospital_ward_vacancy_percentage(self):
         res = self.client.get("/api/hospitals?top_n=21")
@@ -236,6 +247,104 @@ class TestHospitalAPI(unittest.TestCase):
         )
         self.assertEqual(neelachal["general_ward_vacancy_pct"], 19.1)
         self.assertEqual(neelachal["general_ward_reported_at"], "2026-10-10T00:00:00+00:00")
+
+    def test_active_general_and_emergency_bookings_update_hospital_inventory(self):
+        hospital_id = "BBSR020"
+
+        def hospital_inventory():
+            response = self.client.get("/api/hospitals?top_n=21")
+            self.assertEqual(response.status_code, 200, response.text)
+            return next(
+                hospital for hospital in response.json()["hospitals"]
+                if hospital["hospital_id"] == hospital_id
+            )
+
+        initial = hospital_inventory()
+        initial_stats = self.client.get("/api/stats").json()
+
+        general_request = self.client.post("/api/requests/hold", json={
+            "hospital_id": hospital_id,
+            "flow_type": "GENERAL_WARD",
+            "specialty": "General Medicine",
+            "bed_type": "Standard",
+            "patient_name": "General Ward Inventory Test",
+            "contact_mobile": "9876543210",
+        }).json()
+        self.assertEqual(hospital_inventory()["general_ward_available_beds"], initial["general_ward_available_beds"])
+        verified_general = self.client.post("/api/requests/verify", json={
+            "request_id": general_request["request_id"],
+            "otp_code": general_request["dev_otp"],
+        })
+        self.assertEqual(verified_general.status_code, 200)
+        general_inventory = hospital_inventory()
+        self.assertEqual(
+            general_inventory["general_ward_available_beds"],
+            initial["general_ward_available_beds"] - 1,
+        )
+        self.assertEqual(
+            general_inventory["general_ward_vacancy_pct"],
+            round(100 * general_inventory["general_ward_available_beds"] / initial["general_ward_total_beds"], 1),
+        )
+        self.assertEqual(general_inventory["emergency_available_beds"], initial["emergency_available_beds"])
+        general_stats = self.client.get("/api/stats").json()
+        self.assertEqual(general_stats["general_ward_free"], initial_stats["general_ward_free"] - 1)
+        self.assertEqual(general_stats["emergency_live"], initial_stats["emergency_live"])
+
+        _, staff_headers = self.create_desk_staff(hospital_id)
+        self.assertEqual(
+            self.client.post(f"/api/requests/{general_request['request_id']}/checkin").status_code,
+            200,
+        )
+        self.assertEqual(
+            hospital_inventory()["general_ward_available_beds"],
+            initial["general_ward_available_beds"] - 1,
+        )
+        self.assertEqual(
+            self.client.post(
+                f"/api/requests/{general_request['request_id']}/discharge",
+                headers=staff_headers,
+            ).status_code,
+            200,
+        )
+        self.assertEqual(
+            hospital_inventory()["general_ward_available_beds"],
+            initial["general_ward_available_beds"],
+        )
+
+        emergency_request = self.client.post("/api/requests/hold", json={
+            "hospital_id": hospital_id,
+            "flow_type": "EMERGENCY",
+            "specialty": "Emergency",
+            "bed_type": "ICU",
+            "patient_count": 2,
+            "patient_name": "Emergency Inventory Test",
+            "contact_mobile": "9876543210",
+        }).json()
+        verified_emergency = self.client.post("/api/requests/verify", json={
+            "request_id": emergency_request["request_id"],
+            "otp_code": emergency_request["dev_otp"],
+        })
+        self.assertEqual(verified_emergency.status_code, 200)
+        emergency_inventory = hospital_inventory()
+        self.assertEqual(
+            emergency_inventory["emergency_available_beds"],
+            initial["emergency_available_beds"] - 2,
+        )
+        self.assertEqual(
+            emergency_inventory["general_ward_available_beds"],
+            initial["general_ward_available_beds"],
+        )
+        emergency_stats = self.client.get("/api/stats").json()
+        self.assertEqual(emergency_stats["general_ward_free"], initial_stats["general_ward_free"])
+        self.assertEqual(emergency_stats["emergency_live"], initial_stats["emergency_live"] - 2)
+        self.assertEqual(
+            self.client.post(f"/api/requests/{emergency_request['request_id']}/cancel").status_code,
+            200,
+        )
+        self.assertEqual(
+            hospital_inventory()["emergency_available_beds"],
+            initial["emergency_available_beds"],
+        )
 
     def test_demo_forecast_is_explicitly_non_operational(self):
         res = self.client.get("/api/hospitals?top_n=1")
@@ -568,7 +677,8 @@ class TestHospitalAPI(unittest.TestCase):
         with patch.dict(os.environ, {"ENABLE_EXTERNAL_CHAT": "false"}):
             chat_res = self.client.post("/api/chat", json={"message": "What is the ranking formula?"})
         self.assertEqual(chat_res.status_code, 200)
-        self.assertIn("Score = 1000 * Rating", chat_res.json()["response"])
+        self.assertIn("(Availability %", chat_res.json()["response"])
+        self.assertIn("Average rating × Review count", chat_res.json()["response"])
 
     def test_auth_registration_and_login(self):
         phone = f"9{uuid.uuid4().int % 1000000000:09d}"

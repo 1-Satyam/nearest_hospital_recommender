@@ -10,8 +10,8 @@ The objective of ArogyaSetu is to simplify hospital discovery by providing users
 
 ## What it does
 
-- Lists and ranks hospitals using location, distance, fees, ratings, bed availability, specialties, emergency readiness, and PM-JAY status.
-- Users can choose which hospitals appear in Top N by recommended order, road distance, admission fee, rating multiplied by review count, or general-ward vacancy, and reverse the sort direction where applicable.
+- Lists and ranks hospitals using a weighted recommendation score: `(general-ward availability percentage × 100) + (average rating × review count) − distance in km − admission fee in INR`. Availability is calculated from the reported free/total ward beds, adjusted for active bookings.
+- Users can choose which hospitals appear in Top N by recommended order, road distance, admission fee, rating multiplied by review count, or available beds, and reverse the sort direction where applicable.
 - Provides a map, estimated route information, filters, and a side-by-side comparison matrix.
 - Shows reported general-ward vacancy separately from the explicitly non-operational demo forecast.
 - Includes account sign-in, a local demonstration bed-hold lifecycle, reservation history, and a hospital desk portal.

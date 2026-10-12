@@ -11,15 +11,34 @@ from data_engine.loader import load_hospitals
 
 class TestBackendCore(unittest.TestCase):
     
-    def test_mentor_ranking_formula(self):
-        """Verify exact formula: Score = -(fee) + -(distance) + (rating * 1000)"""
-        score = calculate_score(fee=2000, distance_km=5, rating=4.5)
-        self.assertEqual(score, 2495.0)
+    def test_availability_weighted_ranking_formula(self):
+        """Availability is weighted most; ratings and reviews help, while distance and fee reduce score."""
+        score = calculate_score(
+            availability_pct=80,
+            rating=4.5,
+            review_count=200,
+            distance_km=5,
+            fee=2000,
+        )
+        self.assertEqual(score, 6895.0)
 
-    def test_mentor_ranking_missing_values(self):
-        """Verify missing values do not crash ranking and default gracefully."""
-        score = calculate_score(fee=np.nan, distance_km=10, rating=4.0)
-        self.assertEqual(score, (4.0 * 1000) - 0 - 10)
+    def test_availability_weighted_ranking_missing_values(self):
+        """Missing values do not crash ranking and default to zero contributions."""
+        score = calculate_score(
+            availability_pct=np.nan,
+            rating=4.0,
+            review_count=100,
+            distance_km=10,
+            fee=np.nan,
+        )
+        self.assertEqual(score, 390.0)
+
+    def test_availability_percentage_uses_available_beds(self):
+        from core.ranking import calculate_availability_pct
+
+        self.assertEqual(calculate_availability_pct(9, 47), 9 / 47 * 100)
+        self.assertEqual(calculate_availability_pct(0, 47), 0.0)
+        self.assertEqual(calculate_availability_pct(10, 0), 0.0)
 
     def test_haversine_distance(self):
         """Verify distance calculations are correct."""

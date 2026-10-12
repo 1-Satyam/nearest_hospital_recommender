@@ -3,6 +3,7 @@ import { IconHospital, IconPhone, IconMapPin, IconShield, IconDatabase, IconArro
 
 export default function Navbar({
   user,
+  registryStats,
   onOpenAuth,
   onLogout,
   userLocation,
@@ -60,13 +61,13 @@ export default function Navbar({
         <div className="max-w-7xl mx-auto w-full flex flex-wrap sm:flex-nowrap items-center justify-between gap-x-3 gap-y-1">
           <div className="flex flex-wrap items-center gap-x-2 sm:gap-x-4">
             <span className="font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider text-[10px]">Bhubaneswar Bed Registry:</span>
-            <span>Coverage: <b className={isDarkMode ? 'text-white' : 'text-stone-900'}>21 Hospitals</b></span>
+            <span>Coverage: <b className={isDarkMode ? 'text-white' : 'text-stone-900'}>{registryStats?.coverage_hospitals ?? '—'} Hospitals</b></span>
             <span className="hidden sm:inline text-stone-400">&bull;</span>
-            <span>Emergency: <b className="text-emerald-600 dark:text-emerald-400">84 Live</b></span>
+            <span>Emergency: <b className="text-emerald-600 dark:text-emerald-400">{registryStats?.emergency_live ?? '—'} Live</b></span>
             <span className="hidden sm:inline text-stone-400">&bull;</span>
-            <span>General Ward: <b className="text-blue-600 dark:text-blue-400">809 Free</b></span>
+            <span>General Ward: <b className="text-blue-600 dark:text-blue-400">{registryStats?.general_ward_free ?? '—'} Free</b></span>
             <span className="hidden sm:inline text-stone-400">&bull;</span>
-            <span>PM-JAY: <b className="text-amber-600 dark:text-amber-400">17 Empanelled</b></span>
+            <span>PM-JAY: <b className="text-amber-600 dark:text-amber-400">{registryStats?.pmjay_empanelled ?? '—'} Empanelled</b></span>
           </div>
           <div className="hidden sm:flex items-center space-x-2 pl-4">
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>

@@ -2,14 +2,35 @@ import pandas as pd
 import numpy as np
 from core.routing import RoutingService
 
-def calculate_score(fee: float, distance_km: float, rating: float) -> float:
+
+def _number_or_zero(value: float) -> float:
     try:
-        fee = float(fee) if pd.notna(fee) else 0.0
-        distance_km = float(distance_km) if pd.notna(distance_km) else 0.0
-        rating = float(rating) if pd.notna(rating) else 0.0
-        return (rating * 1000) - fee - distance_km
-    except (ValueError, TypeError):
+        number = float(value)
+        return number if np.isfinite(number) else 0.0
+    except (TypeError, ValueError):
         return 0.0
+
+
+def calculate_availability_pct(available_beds: float, total_beds: float) -> float:
+    available = max(0.0, _number_or_zero(available_beds))
+    total = _number_or_zero(total_beds)
+    if total <= 0:
+        return 0.0
+    return float(np.clip(available / total * 100.0, 0.0, 100.0))
+
+
+def calculate_score(
+    availability_pct: float,
+    rating: float,
+    review_count: float,
+    distance_km: float,
+    fee: float,
+) -> float:
+    availability = float(np.clip(_number_or_zero(availability_pct), 0.0, 100.0))
+    rating_review_weight = _number_or_zero(rating) * max(0.0, _number_or_zero(review_count))
+    distance = max(0.0, _number_or_zero(distance_km))
+    admission_fee = max(0.0, _number_or_zero(fee))
+    return availability * 100.0 + rating_review_weight - distance - admission_fee
 
 def rank_and_format_hospitals(
     df: pd.DataFrame, 
@@ -36,11 +57,28 @@ def rank_and_format_hospitals(
     res['distance_source'] = matrix['source']
     res['is_real_road'] = matrix['is_real_road']
     
-    res['general_ward_vacancy_pct'] = np.round(100.0 - res['general_ward_occupancy_pct'], 2)
-    
+    if 'general_ward_occupancy_pct' in res.columns:
+        occupancy = pd.to_numeric(res['general_ward_occupancy_pct'], errors='coerce').fillna(100.0)
+        res['availability_pct'] = np.clip(100.0 - occupancy, 0.0, 100.0)
+    elif {'general_ward_available_beds', 'general_ward_total_beds'}.issubset(res.columns):
+        res['availability_pct'] = [
+            calculate_availability_pct(row['general_ward_available_beds'], row['general_ward_total_beds'])
+            for _, row in res.iterrows()
+        ]
+    else:
+        res['availability_pct'] = 0.0
+    res['general_ward_vacancy_pct'] = res['availability_pct']
+
+    review_counts = res['rating_count'] if 'rating_count' in res.columns else pd.Series(0, index=res.index)
     res['mentor_score'] = [
-        calculate_score(fee=row['admission_fee_inr'], distance_km=row['distance_km'], rating=row['rating_5'])
-        for _, row in res.iterrows()
+        calculate_score(
+            availability_pct=row['availability_pct'],
+            rating=row['rating_5'],
+            review_count=review_count,
+            distance_km=row['distance_km'],
+            fee=row['admission_fee_inr'],
+        )
+        for (_, row), review_count in zip(res.iterrows(), review_counts)
     ]
     
     if pmjay_only:

@@ -212,11 +212,11 @@ def conversational_ai_engine(query: str) -> str:
     if re.search(r"(formula|rank|score|mentor|algorithm|math|how do you calculate|scoring)", q_lower):
         return (
             "### Ranking Formula & Logic\n\n"
-            "Hospitals are scored deterministically using:\n\n"
-            "**Score = 1000 * Rating - Fee (INR) - Road Distance (km)**\n\n"
-            "* **Rating Multiplier (1000x)**: Elevates top-rated institutions based on verified reviews.\n"
-            "* **Fee Deduction**: Prioritizes affordable public healthcare.\n"
-            "* **Road Distance as Risk Decrement**: Real driving kilometers via OpenStreetMap/OSRM subtract from the score, penalizing distant transit."
+            "Hospitals are ranked using:\n\n"
+            "**Score = (Availability % × 100) + (Average rating × Review count) − Distance (km) − Admission fee (INR)**\n\n"
+            "* **Availability**: General-ward free beds as a percentage of total beds; active bookings are deducted from the reported free-bed count.\n"
+            "* **Rating and reviews**: The average rating is multiplied by the number of reviews.\n"
+            "* **Distance and fee**: Lower estimated distance and lower admission fees increase a hospital's score because both are subtracted."
         )
 
     if re.search(r"(pmjay|ayushman|bsky|cashless|insurance|card|gjay)", q_lower):
@@ -258,7 +258,10 @@ def chat_with_bot(payload: ChatMessage):
         logger.info("Invoking configured chatbot provider")
         ai_reply = query_groq_api(message, groq_key)
         if ai_reply:
-            if ranking_prompt and "Score = 1000 * Rating" not in ai_reply:
+            if ranking_prompt and not (
+                re.search(r"availability", ai_reply, re.IGNORECASE)
+                and re.search(r"review", ai_reply, re.IGNORECASE)
+            ):
                 fallback = conversational_ai_engine(message)
                 logger.info("Using deterministic response for scoring question")
                 return {"response": fallback, "mode": "ai", "provider": "Arogya Setu Assistant"}

@@ -121,7 +121,7 @@ export default function HospitalCard({
             </div>
 
             <div className={`p-2 xl:p-1.5 rounded-xl border flex flex-col min-w-0 ${isDarkMode ? 'bg-[#172338] border-slate-700' : 'bg-slate-50 border-slate-200'}`}>
-              <span className={`text-[10px] xl:text-[9px] uppercase font-semibold leading-tight ${isDarkMode ? 'text-slate-300' : 'text-slate-600'}`}>Reported Ward Vacancy</span>
+              <span className={`text-[10px] xl:text-[9px] uppercase font-semibold leading-tight ${isDarkMode ? 'text-slate-300' : 'text-slate-600'}`}>General Ward Vacancy</span>
               <div className="flex items-center justify-between gap-1">
                 <span className="text-sm xl:text-xs font-extrabold text-emerald-600">
                   {vacancyPercent === null ? '—' : `${vacancyPercent}%`}
@@ -130,8 +130,13 @@ export default function HospitalCard({
                   {hospital.general_ward_available_beds} free
                 </span>
               </div>
+              {hospital.emergency_available_beds !== null && hospital.emergency_available_beds !== undefined && (
+                <span className={`text-[10px] xl:text-[9px] leading-tight ${isDarkMode ? 'text-slate-300' : 'text-slate-600'}`}>
+                  Emergency: {hospital.emergency_available_beds} free
+                </span>
+              )}
               <span className={`text-[10px] xl:text-[9px] leading-tight ${isDarkMode ? 'text-slate-300' : 'text-slate-600'}`}>
-                {reportedDate ? `Inventory snapshot · ${reportedDate}` : 'Inventory ratio · not a forecast'}
+                {reportedDate ? `Ward inventory · ${reportedDate}` : 'Ward inventory · not a forecast'}
               </span>
             </div>
           </div>

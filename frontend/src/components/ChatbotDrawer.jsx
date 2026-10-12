@@ -53,7 +53,7 @@ export default function ChatbotDrawer({ isDarkMode }) {
         ...prev,
         {
           sender: 'bot',
-          text: "I encountered a connection issue. Hospitals are scored using: **Score = 1000 * Rating - Fee - Distance (km)**. For urgent emergencies, dial **108** immediately.",
+          text: "I encountered a connection issue. Hospitals are scored using: **(Availability % × 100) + (Average rating × Review count) − Distance (km) − Admission fee (INR)**. For urgent emergencies, dial **108** immediately.",
           mode: 'ai',
           provider: 'Arogya Setu Assistant'
         }

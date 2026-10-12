@@ -23,8 +23,10 @@ export default function App() {
   const requestedHoldId = new URLSearchParams(window.location.search).get('hold_id');
   useEffect(() => {
     const handleReset = () => {
-      setActiveHoldPass(null);
       setActiveTab("explore");
+      const portalUrl = new URL(window.location.href);
+      portalUrl.searchParams.delete('hold_id');
+      window.history.replaceState({}, '', `${portalUrl.pathname}${portalUrl.search}${portalUrl.hash}`);
     };
     window.addEventListener("arogya:reset-hold-pass", handleReset);
     return () => window.removeEventListener("arogya:reset-hold-pass", handleReset);
@@ -78,6 +80,7 @@ export default function App() {
   }, []);
 
   const [hospitals, setHospitals] = useState([]);
+  const [registryStats, setRegistryStats] = useState(null);
   const [specialtiesList, setSpecialtiesList] = useState([]);
   const [topN, setTopN] = useState(10);
   const [topNSortKey, setTopNSortKey] = useState('recommended');
@@ -210,7 +213,7 @@ export default function App() {
   const [filterCardsToTopN, setFilterCardsToTopN] = useState(true);
   const handleTopNSortKeyChange = (key) => {
     setTopNSortKey(key);
-    if (HOSPITAL_SORT_DEFAULTS[key]) setTopNSortDirection(HOSPITAL_SORT_DEFAULTS[key]);
+    setTopNSortDirection(HOSPITAL_SORT_DEFAULTS[key] || 'asc');
   };
   const handleTopNChange = (value) => {
     setTopN(value);
@@ -268,14 +271,24 @@ export default function App() {
     return updatedUser;
   };
 
+  const fetchRegistryStats = async () => {
+    try {
+      const response = await fetch('/api/stats');
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.detail || 'Could not refresh bed registry totals.');
+      setRegistryStats(data);
+      return data;
+    } catch (error) {
+      console.error('Could not load bed registry totals:', error);
+      return null;
+    }
+  };
+
   useEffect(() => {
-    fetch('/api/stats')
-      .then(res => res.json())
-      .then(data => {
-        const localitiesList = Array.isArray(data?.localities) ? data.localities : [];
-        if (localitiesList.length) setLocalities(localitiesList);
-      })
-      .catch(err => console.error(err));
+    fetchRegistryStats().then((data) => {
+      const localitiesList = Array.isArray(data?.localities) ? data.localities : [];
+      if (localitiesList.length) setLocalities(localitiesList);
+    });
 
     fetch('/api/specialties')
       .then(res => res.json())
@@ -314,6 +327,11 @@ export default function App() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const refreshBedInventory = () => {
+    fetchHospitals();
+    fetchRegistryStats();
   };
 
   useEffect(() => {
@@ -409,8 +427,8 @@ export default function App() {
       : hospitals;
 
   useEffect(() => {
-    setSelectedHospital(topNSortedHospitals[0] || null);
-  }, [topNSortKey, topNSortDirection, topNSortedHospitals]);
+    setSelectedHospital(orderedHospitals[0] || null);
+  }, [topNSortKey, topNSortDirection, orderedHospitals]);
 
   return (
     <div className={`min-h-screen flex flex-col transition-colors duration-200 ${
@@ -419,6 +437,7 @@ export default function App() {
       {/* Top Header Navbar */}
       <Navbar
         user={user}
+        registryStats={registryStats}
         onRequireAuth={() => setShowAuthModal(true)}
         onOpenAuth={() => setShowAuthModal(true)}
         onOpenProfile={() => setIsProfileOpen(true)}
@@ -652,18 +671,7 @@ export default function App() {
                 return;
               }
               recordHoldUpdate(holdInfo);
-              setHospitals(prev => prev.map(h => {
-                if (h.hospital_id === holdInfo.hospital_id) {
-                  const updatedBeds = Math.max(0, (h.general_ward_available_beds || 1) - 1);
-                  const total = h.general_ward_total_beds || 100;
-                  return {
-                    ...h,
-                    general_ward_available_beds: updatedBeds,
-                    general_ward_vacancy_pct: Math.round((updatedBeds / total) * 1000) / 10
-                  };
-                }
-                return h;
-              }));
+              fetchHospitals();
               setActiveTab('hold_pass');
             }}
             onCancel={() => setActiveTab('gateway')}
@@ -680,14 +688,14 @@ export default function App() {
               window.open(passUrl.toString(), '_blank', 'noopener,noreferrer');
             }}
             onReset={() => {
-              setActiveHoldPass(null);
+              setActiveHoldPass(latestActiveHold(holdLedger));
               setHoldPassError('');
-              const portalUrl = new URL(window.location.href);
-              portalUrl.searchParams.delete('hold_id');
-              window.history.replaceState({}, '', `${portalUrl.pathname}${portalUrl.search}${portalUrl.hash}`);
               setActiveTab('explore');
             }}
-            onHoldUpdate={recordHoldUpdate}
+            onHoldUpdate={(holdInfo) => {
+              recordHoldUpdate(holdInfo);
+              refreshBedInventory();
+            }}
             isDarkMode={isDarkMode}
           />
         )}
@@ -783,7 +791,9 @@ export default function App() {
                 }`}>
                   <span>Interactive Map (Bhubaneswar)</span>
                   <span className="text-blue-500 truncate max-w-[60%] text-right">
-                    {selectedHospital ? `#${selectedHospital.rank} ${selectedHospital.hospital_name}` : ''}
+                    {selectedHospital
+                      ? `${selectedHospital.is_in_top_n ? `Top N pick #${selectedHospital.selection_rank} · ` : ''}Score rank #${selectedHospital.rank} · ${selectedHospital.hospital_name}`
+                      : ''}
                   </span>
                 </div>
                 <div className="h-[340px] sm:h-[480px]">
@@ -901,6 +911,7 @@ export default function App() {
               return;
             }
             recordHoldUpdate(holdInfo);
+            refreshBedInventory();
             setEmergencyModalHospital(null);
             setActiveTab('hold_pass');
           }}

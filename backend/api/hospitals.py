@@ -1,6 +1,7 @@
 import math
 from typing import Any, Optional
 import logging
+from datetime import datetime, timezone
 from fastapi import HTTPException
 
 import pandas as pd
@@ -8,7 +9,9 @@ from fastapi import APIRouter
 
 from data_engine.loader import load_hospitals, load_specialty_beds
 from core.routing import RoutingService
+from core.ranking import calculate_availability_pct, calculate_score
 from core.forecasting import predict_demo_availability
+from db.database import get_connection
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -59,6 +62,41 @@ def _vacancy_percent(available_beds: Any, total_beds: Any) -> float:
         return 0.0
     available = _safe_float(available_beds, 0.0)
     return round(min(100.0, max(0.0, available / total * 100.0)), 1)
+
+
+def _get_active_booking_counts() -> dict[tuple[str, str], int]:
+    conn = get_connection()
+    try:
+        rows = conn.execute(
+            """
+            SELECT id, hospital_id, flow_type, patient_count, status, hold_expires_at
+            FROM bed_requests
+            WHERE status IN ('HELD', 'ADMITTED')
+            """
+        ).fetchall()
+    finally:
+        conn.close()
+
+    now = datetime.now(timezone.utc)
+    counts: dict[tuple[str, str], int] = {}
+    for row in rows:
+        if row["status"] == "HELD" and row["hold_expires_at"]:
+            try:
+                expiry = datetime.fromisoformat(row["hold_expires_at"])
+                if expiry.tzinfo is None:
+                    expiry = expiry.replace(tzinfo=timezone.utc)
+                if expiry <= now:
+                    continue
+            except ValueError:
+                logger.warning(
+                    "Invalid hold expiry while calculating hospital inventory request_id=%s",
+                    row["id"],
+                )
+
+        key = (str(row["hospital_id"]).strip(), str(row["flow_type"]).upper())
+        count = max(1, _safe_int(row["patient_count"], 1))
+        counts[key] = counts.get(key, 0) + count
+    return counts
 
 
 @router.get("/route")
@@ -150,17 +188,37 @@ def get_hospitals(
         )
         result_df["road_distance_km"] = result_df["distance_km"]
         result_df["eta_minutes"] = result_df["distance_km"].clip(lower=0).apply(lambda value: max(3, int(round(float(value) * 2.3))))
-        result_df["score"] = (
-            result_df["rating"].fillna(4.0).astype(float) * 1000.0
-            - result_df["admission_fee_inr"].fillna(0).astype(float)
-            - result_df["distance_km"].fillna(0).astype(float)
-        )
-        result_df = result_df.sort_values(["score", "distance_km"], ascending=[False, True]).reset_index(drop=True)
 
         beds_df = load_specialty_beds()
+        active_booking_counts = _get_active_booking_counts()
         results = []
         for idx, row in result_df.iterrows():
             hospital_id = str(row.get("hospital_id", f"BBSR{idx + 1:03d}"))
+            general_bookings = active_booking_counts.get((hospital_id, "GENERAL_WARD"), 0)
+            emergency_bookings = active_booking_counts.get((hospital_id, "EMERGENCY"), 0)
+            general_beds_available = max(
+                0,
+                _safe_int(row.get("general_ward_available_beds", 0)) - general_bookings,
+            )
+            emergency_beds_available = max(
+                0,
+                _safe_int(
+                    row.get("emergency_available_beds", row.get("general_ward_available_beds", 0))
+                ) - emergency_bookings,
+            )
+            general_beds_total = _safe_int(row.get("general_ward_total_beds", 0))
+            availability_pct = calculate_availability_pct(general_beds_available, general_beds_total)
+            rating = _safe_float(row.get("rating", 4.0), 4.0)
+            review_count = _safe_int(row.get("rating_count", 0), 0)
+            admission_fee = _safe_int(row.get("admission_fee_inr", 0), 0)
+            distance_km = _safe_float(row.get("distance_km", 0.0), 0.0)
+            recommendation_score = calculate_score(
+                availability_pct=availability_pct,
+                rating=rating,
+                review_count=review_count,
+                distance_km=distance_km,
+                fee=admission_fee,
+            )
             rec = {
                 "hospital_id": hospital_id,
                 "hospital_name": str(row.get("hospital_name", "Hospital")),
@@ -169,24 +227,27 @@ def get_hospitals(
                 "longitude": float(_safe_float(row.get("longitude", row.get("lon", 85.8245)), 85.8245)),
                 "lat": float(_safe_float(row.get("latitude", row.get("lat", 20.2961)), 20.2961)),
                 "lon": float(_safe_float(row.get("longitude", row.get("lon", 85.8245)), 85.8245)),
-                "rating": float(_safe_float(row.get("rating", 4.0), 4.0)),
-                "rating_5": float(_safe_float(row.get("rating", 4.0), 4.0)),
-                "rating_count": int(_safe_int(row.get("rating_count", 0), 0)),
-                "admission_fee_inr": int(_safe_int(row.get("admission_fee_inr", 0), 0)),
-                "admission_fee": int(_safe_int(row.get("admission_fee_inr", 0), 0)),
-                "general_ward_available_beds": int(_safe_int(row.get("general_ward_available_beds", 0), 0)),
-                "general_ward_total_beds": int(_safe_int(row.get("general_ward_total_beds", 0), 0)),
+                "rating": rating,
+                "rating_5": rating,
+                "rating_count": review_count,
+                "review_count": review_count,
+                "admission_fee_inr": admission_fee,
+                "admission_fee": admission_fee,
+                "general_ward_available_beds": general_beds_available,
+                "general_ward_total_beds": general_beds_total,
+                "availability_pct": availability_pct,
                 "general_ward_vacancy_pct": _vacancy_percent(
-                    row.get("general_ward_available_beds", 0),
+                    general_beds_available,
                     row.get("general_ward_total_beds", 0),
                 ),
-                "emergency_available_beds": int(_safe_int(row.get("emergency_available_beds", row.get("general_ward_available_beds", 0)), 0)),
-                "distance_km": float(_safe_float(row.get("distance_km", 0.0), 0.0)),
+                "emergency_available_beds": emergency_beds_available,
+                "distance_km": distance_km,
                 "road_distance_km": float(_safe_float(row.get("road_distance_km", row.get("distance_km", 0.0)), 0.0)),
                 "eta_minutes": int(_safe_int(row.get("eta_minutes", 0), 0)),
                 "is_real_road": False,
                 "distance_source": "Estimated straight-line distance and ETA; not live road routing",
-                "score": float(_safe_float(row.get("score", 0.0), 0.0)),
+                "score": recommendation_score,
+                "mentor_score": recommendation_score,
                 "pmjay_active": bool(to_bool(row.get("pmjay_active", row.get("pmjay_gjay_empanelled", "No")))),
                 "pmjay_gjay_empanelled": str(row.get("pmjay_gjay_empanelled", "No")),
                 "emergency_ready": bool(to_bool(row.get("emergency_ready", row.get("emergency_24x7", "No")))),
@@ -212,6 +273,13 @@ def get_hospitals(
 
             results.append(rec)
 
+        results.sort(
+            key=lambda record: (
+                -record["score"],
+                record["distance_km"],
+                record["hospital_id"],
+            )
+        )
         top_limit = max(1, int(top_n or 10))
         for index, record in enumerate(results, start=1):
             record["rank"] = index
@@ -234,6 +302,7 @@ def get_hospitals(
 def get_stats():
     df = load_hospitals()
     total_h = int(len(df)) if df is not None and not df.empty else 21
+    active_booking_counts = _get_active_booking_counts()
 
     pmjay_cnt = 0
     gen_free = 0
@@ -243,11 +312,32 @@ def get_stats():
         if "pmjay_gjay_empanelled" in df.columns:
             pmjay_cnt = int(df["pmjay_gjay_empanelled"].map(lambda value: str(value).strip().lower() == "yes").sum())
         if "general_ward_available_beds" in df.columns:
-            gen_free = int(pd.to_numeric(df["general_ward_available_beds"], errors="coerce").fillna(0).sum())
+            gen_free = sum(
+                max(
+                    0,
+                    _safe_int(row["general_ward_available_beds"])
+                    - active_booking_counts.get((str(row["hospital_id"]).strip(), "GENERAL_WARD"), 0),
+                )
+                for _, row in df.iterrows()
+            )
         if "emergency_available_beds" in df.columns:
-            emerg_live = int(pd.to_numeric(df["emergency_available_beds"], errors="coerce").fillna(0).sum())
+            emerg_live = sum(
+                max(
+                    0,
+                    _safe_int(row["emergency_available_beds"])
+                    - active_booking_counts.get((str(row["hospital_id"]).strip(), "EMERGENCY"), 0),
+                )
+                for _, row in df.iterrows()
+            )
         elif "general_ward_available_beds" in df.columns:
-            emerg_live = int(pd.to_numeric(df["general_ward_available_beds"], errors="coerce").fillna(0).sum())
+            emerg_live = sum(
+                max(
+                    0,
+                    _safe_int(row["general_ward_available_beds"])
+                    - active_booking_counts.get((str(row["hospital_id"]).strip(), "EMERGENCY"), 0),
+                )
+                for _, row in df.iterrows()
+            )
 
     return {
         "status": "success",
