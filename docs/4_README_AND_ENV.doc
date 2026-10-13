@@ -1,0 +1,47 @@
+<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+<head><meta charset="utf-8" /><title>ArogyaSetu — Setup, .env.example &amp; License</title></head>
+<body style="font-family:Arial,sans-serif;font-size:11pt;line-height:1.5;color:#111827;">
+  <h1 style="color:#0f172a;font-size:20pt;border-bottom:2px solid #2563eb;padding-bottom:6px;">ArogyaSetu — Setup Guide, .env.example &amp; MIT License</h1>
+
+  <h2 style="color:#1e3a8a;font-size:15pt;">1. Local Setup &amp; Verification Commands</h2>
+  <pre style="background:#f1f5f9;padding:10px;border:1px solid #cbd5e1;font-family:Consolas,monospace;font-size:10pt;"># 1. Backend Setup (Port 8000)
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r backend/requirements.txt
+python -m uvicorn backend.main:app --reload --port 8000
+
+# 2. Frontend Setup (Port 3000)
+cd frontend
+npm install
+npm run dev
+
+# 3. Run Regression Tests (14 tests)
+python -m unittest backend/tests/test_core.py backend/tests/test_api.py</pre>
+
+  <h2 style="color:#1e3a8a;font-size:15pt;">2. Environment Variables Template (<code>.env.example</code>)</h2>
+  <pre style="background:#f1f5f9;padding:10px;border:1px solid #cbd5e1;font-family:Consolas,monospace;font-size:10pt;">APP_ENV=development
+LOG_LEVEL=INFO
+PORT=8000
+DATABASE_PATH=
+ALLOWED_HOSTS=localhost,127.0.0.1
+CORS_ORIGINS=http://localhost:3000,http://127.0.0.1:3000,http://localhost:5173,http://127.0.0.1:5173
+ENABLE_EXTERNAL_ROUTING=true
+ENABLE_EXTERNAL_CHAT=false
+GROQ_API_KEY=</pre>
+
+  <h2 style="color:#1e3a8a;font-size:15pt;">3. MIT License (<code>LICENSE</code>)</h2>
+  <pre style="background:#f1f5f9;padding:10px;border:1px solid #cbd5e1;font-family:Consolas,monospace;font-size:10pt;">MIT License
+
+Copyright (c) 2026 ArogyaSetu Contributors
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.</pre>
+</body>
+</html>

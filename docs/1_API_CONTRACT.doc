@@ -1,0 +1,52 @@
+<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+<head><meta charset="utf-8" /><title>ArogyaSetu — API Contract</title></head>
+<body style="font-family:Arial,sans-serif;font-size:11pt;line-height:1.5;color:#111827;">
+  <h1 style="color:#0f172a;font-size:20pt;border-bottom:2px solid #2563eb;padding-bottom:6px;">ArogyaSetu — Complete API Contract (docs/API_CONTRACT.md)</h1>
+  <p><strong>Base URL (Local Development):</strong> <code>http://localhost:8000</code> (proxied via Vite at <code>http://localhost:3000/api</code>)<br/>
+  <strong>Interactive OpenAPI Docs:</strong> <code>http://localhost:8000/docs</code></p>
+
+  <h2 style="color:#1e3a8a;font-size:15pt;">1. Authentication Models</h2>
+  <ul>
+    <li><strong>Citizen / Patient Session:</strong> <code>arogyasetu_session</code> <code>HttpOnly</code>, <code>SameSite=Lax</code> cookie (stored as SHA-256 hash in <code>user_sessions</code>, 12-hour TTL).</li>
+    <li><strong>Hospital Desk Staff:</strong> <code>X-Hospital-Staff-Token</code> HTTP header (provisioned via <code>backend/db/provision_desk_staff.py</code>, stored as SHA-256 hash in <code>desk_staff</code>, scoped to one <code>hospital_id</code>).</li>
+  </ul>
+
+  <h2 style="color:#1e3a8a;font-size:15pt;">2. All 22 Backend Endpoints</h2>
+  <table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse;width:100%;border:1px solid #cbd5e1;font-size:10pt;">
+    <thead>
+      <tr style="background:#e2e8f0;color:#0f172a;">
+        <th align="left">Method &amp; Path</th>
+        <th align="left">Auth</th>
+        <th align="left">Query / Request Body</th>
+        <th align="left">Response &amp; Status Codes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td><code>GET /</code></td><td>None</td><td>None</td><td>Serves <code>frontend/dist/index.html</code> or online JSON status (200).</td></tr>
+      <tr><td><code>GET /api/health</code></td><td>None</td><td>None</td><td>Checks SQLite reachability via <code>SELECT 1</code> (200 OK / 503 Unavailable).</td></tr>
+      <tr><td><code>GET /api/hospitals</code></td><td>None</td><td><code>lat, lon, top_n, specialty, pmjay_only, emergency_only</code></td><td>Ranked hospitals with live SQLite bed deductions, 24h GBR forecast, and specialty inventory (200 / 503).</td></tr>
+      <tr><td><code>GET /api/route</code></td><td>None</td><td><code>origin_lat, origin_lon, dest_lat, dest_lon</code></td><td>OSRM driving polyline coordinates, distance_km, eta_minutes, and Google Maps URL (200).</td></tr>
+      <tr><td><code>GET /api/stats</code></td><td>None</td><td>None</td><td>Aggregate counts: 21 hospitals, live emergency/ward free beds, PM-JAY count (200).</td></tr>
+      <tr><td><code>GET /api/specialties</code></td><td>None</td><td>None</td><td>Sorted list of all medical specialties across the 21 hospitals (200).</td></tr>
+      <tr><td><code>GET /api/geocode</code></td><td>None</td><td><code>query</code></td><td>Resolves ITER, KIIT, AIIMS, Baramunda, Khandagiri, Master Canteen, Patia, Old Town (200).</td></tr>
+      <tr><td><code>GET /api/reverse-geocode</code></td><td>None</td><td><code>lat, lon</code></td><td>Formatted coordinate label (200).</td></tr>
+      <tr><td><code>POST /api/auth/register</code></td><td>None</td><td><code>name, mobile (10d), password (&gt;=8c), email, has_pmjay, pmjay_card_number</code></td><td>Creates citizen account with scrypt hash and sets session cookie (200 / 400).</td></tr>
+      <tr><td><code>POST /api/auth/login</code></td><td>None</td><td><code>mobile, password</code></td><td>Authenticates user; 5 failed attempts in 15m locks mobile for 15m (200 / 401 / 429).</td></tr>
+      <tr><td><code>GET /api/auth/me</code></td><td>Cookie (Opt)</td><td><code>arogyasetu_session</code></td><td>Returns <code>{"user": {...}}</code> or <code>{"user": null}</code> (200).</td></tr>
+      <tr><td><code>PATCH /api/auth/me</code></td><td>Citizen Cookie</td><td><code>name, has_pmjay, pmjay_card_number</code></td><td>Updates citizen profile (200 / 401).</td></tr>
+      <tr><td><code>POST /api/auth/logout</code></td><td>Cookie (Opt)</td><td><code>arogyasetu_session</code></td><td>Deletes session row and clears cookie (200).</td></tr>
+      <tr><td><code>GET /api/requests/units/{hospital_id}/{specialty}</code></td><td>None</td><td>Path: <code>hospital_id, specialty</code></td><td>Returns 14 interactive bed units (GEN-M, GEN-F, SEM, HDU) with live SQLite hold state (200).</td></tr>
+      <tr><td><code>POST /api/requests/hold</code></td><td>Citizen Cookie</td><td><code>HoldRequest</code> JSON</td><td>Creates <code>OTP_PENDING</code> request with 5m OTP (200 / 401 / 409 Conflict / 503 in prod).</td></tr>
+      <tr><td><code>POST /api/requests/verify</code></td><td>Citizen Cookie</td><td><code>request_id, otp_code (6d)</code></td><td>Atomically claims bed for 30 minutes as <code>HELD</code> (200 / 400 / 409 / 429).</td></tr>
+      <tr><td><code>GET /api/requests/mine</code></td><td>Citizen Cookie</td><td>None</td><td>Lists up to 100 bed requests for the signed-in user (200 / 401).</td></tr>
+      <tr><td><code>GET /api/requests/{id}</code></td><td>Citizen Cookie</td><td>Path: <code>request_id</code></td><td>Detailed status and hospital metadata for a single hold pass (200 / 404).</td></tr>
+      <tr><td><code>POST /api/requests/{id}/checkin</code></td><td>Citizen OR Staff</td><td>Cookie or <code>X-Hospital-Staff-Token</code></td><td>Transitions <code>HELD</code> to <code>ADMITTED</code> (200 / 404 / 409).</td></tr>
+      <tr><td><code>POST /api/requests/{id}/cancel</code></td><td>Citizen OR Staff</td><td>Cookie or <code>X-Hospital-Staff-Token</code></td><td>Transitions <code>HELD</code> to <code>CANCELLED</code> and releases bed (200 / 409).</td></tr>
+      <tr><td><code>POST /api/requests/{id}/discharge</code></td><td>Staff Token</td><td>Header: <code>X-Hospital-Staff-Token</code></td><td>Transitions <code>ADMITTED</code> to <code>DISCHARGED</code> and releases bed (200 / 401 / 409).</td></tr>
+      <tr><td><code>GET /api/requests/portal/active</code></td><td>Staff Token</td><td>Header: <code>X-Hospital-Staff-Token</code></td><td>Lists up to 50 requests scoped to staff member's <code>hospital_id</code> (200 / 401).</td></tr>
+      <tr><td><code>GET /api/requests/{id}/events</code></td><td>Staff Token</td><td>Header: <code>X-Hospital-Staff-Token</code></td><td>Chronological audit log from <code>bed_request_events</code> (200 / 401 / 404).</td></tr>
+      <tr><td><code>POST /api/chat</code></td><td>None</td><td><code>{"message": "..."}</code></td><td>Groq LLM clinical assistant or deterministic local Bhubaneswar fallback (200).</td></tr>
+    </tbody>
+  </table>
+</body>
+</html>

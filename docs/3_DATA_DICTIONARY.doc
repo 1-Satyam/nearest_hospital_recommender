@@ -1,0 +1,55 @@
+<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+<head><meta charset="utf-8" /><title>ArogyaSetu — Data Dictionary &amp; Schema</title></head>
+<body style="font-family:Arial,sans-serif;font-size:11pt;line-height:1.5;color:#111827;">
+  <h1 style="color:#0f172a;font-size:20pt;border-bottom:2px solid #2563eb;padding-bottom:6px;">ArogyaSetu — Data Dictionary &amp; Schema (docs/DATA_DICTIONARY.md)</h1>
+
+  <h2 style="color:#1e3a8a;font-size:15pt;">1. Canonical Hospital Registry (BBSR001–BBSR021)</h2>
+  <table border="1" cellpadding="5" cellspacing="0" style="border-collapse:collapse;width:100%;border:1px solid #cbd5e1;font-size:9.5pt;">
+    <thead>
+      <tr style="background:#e2e8f0;color:#0f172a;">
+        <th align="left">ID</th>
+        <th align="left">Hospital Name</th>
+        <th align="left">Type</th>
+        <th align="left">Address / Locality</th>
+        <th align="left">Ward Beds (Free/Total)</th>
+        <th align="left">Fee</th>
+        <th align="left">Rating (Reviews)</th>
+        <th align="left">PM-JAY</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td><code>BBSR001</code></td><td>All India Institute of Medical Sciences, Bhubaneswar</td><td>Govt</td><td>Sijua, Patrapada</td><td>118 / 1540</td><td>₹375</td><td>4.2 (2,652)</td><td>Yes</td></tr>
+      <tr><td><code>BBSR002</code></td><td>PGIMER &amp; Capital Hospital Bhubaneswar</td><td>Govt</td><td>Unit 6, Ganga Nagar</td><td>64 / 720</td><td>₹0</td><td>3.8 (1,028)</td><td>No</td></tr>
+      <tr><td><code>BBSR003</code></td><td>SUM Ultimate Medicare</td><td>Private</td><td>K8, Kalinga Nagar, Ghatikia</td><td>73 / 900</td><td>₹1,500</td><td>4.7 (11,266)</td><td>Yes</td></tr>
+      <tr><td><code>BBSR004</code></td><td>CARE Hospitals, Bhubaneswar</td><td>Private</td><td>Plot 324, Prachi Enclave Road, Rail Vihar</td><td>38 / 420</td><td>₹1,800</td><td>4.4 (8,406)</td><td>Yes</td></tr>
+      <tr><td><code>BBSR005</code></td><td>Kalinga Hospital</td><td>Private</td><td>Chandrasekharpur</td><td>47 / 410</td><td>₹1,600</td><td>4.1 (3,900)</td><td>Yes</td></tr>
+      <tr><td><code>BBSR006</code></td><td>Hi-Tech Medical College and Hospital</td><td>Private</td><td>Pandra, Rasulgarh</td><td>55 / 560</td><td>₹950</td><td>3.9 (1,522)</td><td>Yes</td></tr>
+      <tr><td><code>BBSR007</code></td><td>Apollo Hospitals Bhubaneswar</td><td>Private</td><td>Plot 251, Sainik School Road, Gajapati Nagar</td><td>22 / 300</td><td>₹2,200</td><td>4.7 (31,818)</td><td>Yes</td></tr>
+      <tr><td><code>BBSR008</code></td><td>Manipal Hospitals, Bhubaneswar</td><td>Private</td><td>Plot 1, Khandagiri</td><td>31 / 360</td><td>₹2,000</td><td>4.8 (17,498)</td><td>No</td></tr>
+      <tr><td><code>BBSR009</code></td><td>UTKAL HOSPITAL</td><td>Private</td><td>Defence Colony Road, Niladri Vihar</td><td>35 / 280</td><td>₹1,000</td><td>4.6 (8,829)</td><td>Yes</td></tr>
+      <tr><td><code>BBSR010</code></td><td>Sparsh Hospitals &amp; Critical Care</td><td>Private</td><td>A/407, Sparsh Hospital Road, Saheed Nagar</td><td>24 / 220</td><td>₹1,250</td><td>4.6 (4,746)</td><td>Yes</td></tr>
+      <tr><td><code>BBSR011</code></td><td>Sunshine Hospital</td><td>Private</td><td>371, Cuttack-Puri Road, Laxmisagar</td><td>29 / 240</td><td>₹900</td><td>4.6 (5,469)</td><td>Yes</td></tr>
+      <tr><td><code>BBSR012</code></td><td>Health Village Hospital</td><td>Private</td><td>B/13, Indradhanu Market Road, IRC Village</td><td>26 / 190</td><td>₹850</td><td>4.5 (853)</td><td>Yes</td></tr>
+      <tr><td><code>BBSR013</code></td><td>IGKC Multispeciality Hospital</td><td>Private</td><td>Ghatikia, Kalinganagar</td><td>18 / 210</td><td>₹1,050</td><td>4.4 (2,518)</td><td>Yes</td></tr>
+      <tr><td><code>BBSR014</code></td><td>Shree Hospitals</td><td>Private</td><td>246, Lewis Road, BJB Nagar</td><td>21 / 170</td><td>₹750</td><td>4.5 (2,825)</td><td>Yes</td></tr>
+      <tr><td><code>BBSR015</code></td><td>Sushruta Hospital and Trauma Care</td><td>Private</td><td>Forest Park Road, near Old Airport Square</td><td>17 / 150</td><td>₹800</td><td>4.5 (467)</td><td>Yes</td></tr>
+      <tr><td><code>BBSR016</code></td><td>Vivekanand Hospital Bhubaneswar</td><td>Private</td><td>A-54/1, Paika Nagar, Baramunda</td><td>23 / 180</td><td>₹700</td><td>4.7 (4,073)</td><td>Yes</td></tr>
+      <tr><td><code>BBSR017</code></td><td>Usthi Hospital</td><td>Private</td><td>N4, Plot N4-1/1, IRC Village, Nayapalli</td><td>20 / 160</td><td>₹850</td><td>4.3 (623)</td><td>Yes</td></tr>
+      <tr><td><code>BBSR018</code></td><td>Max Hospital Bhubaneswar</td><td>Private</td><td>Maitri Vihar Road, Chandrasekharpur</td><td>27 / 260</td><td>₹1,900</td><td>4.3 (3,068)</td><td>No</td></tr>
+      <tr><td><code>BBSR019</code></td><td>Jagannath Hospital</td><td>Private</td><td>Plot No. 185-P, Rupali Street, Saheed Nagar</td><td>8 / 46</td><td>₹500</td><td>3.5 (351)</td><td>No</td></tr>
+      <tr><td><code>BBSR020</code></td><td>Neelachal Hospital Pvt. Ltd.</td><td>Private</td><td>A/84, OFDC Colony, Unit 3, Kharvela Nagar</td><td>9 / 47</td><td>₹500</td><td>4.9 (1,234)</td><td>Yes</td></tr>
+      <tr><td><code>BBSR021</code></td><td>Kalinga Institute of Medical Sciences (KIMS)</td><td>Private</td><td>KIIT Road, Patia</td><td>105 / 1200</td><td>₹800</td><td>4.4 (9,000)</td><td>Yes</td></tr>
+    </tbody>
+  </table>
+
+  <h2 style="color:#1e3a8a;font-size:15pt;">2. SQLite Database Schema (<code>backend/db/database.py</code>)</h2>
+  <ul>
+    <li><strong><code>users</code></strong>: <code>id</code> (PK), <code>name</code>, <code>mobile</code> (UNIQUE), <code>email</code>, <code>password_hash</code>, <code>has_pmjay</code>, <code>pmjay_card_number</code>, <code>created_at</code>.</li>
+    <li><strong><code>user_sessions</code></strong>: <code>token_hash</code> (PK), <code>user_id</code> (FK), <code>expires_at</code>, <code>created_at</code>.</li>
+    <li><strong><code>login_attempts</code></strong>: <code>mobile</code> (PK), <code>failure_count</code>, <code>window_started_at</code>, <code>locked_until</code>.</li>
+    <li><strong><code>desk_staff</code></strong>: <code>staff_id</code> (PK), <code>hospital_id</code>, <code>token_hash</code> (UNIQUE), <code>active</code>, <code>created_at</code>.</li>
+    <li><strong><code>bed_requests</code></strong>: <code>id</code> (PK), <code>user_id</code> (FK), <code>hospital_id</code>, <code>flow_type</code>, <code>specialty</code>, <code>bed_type</code>, <code>bed_unit_id</code>, <code>doctor_incharge</code>, <code>desk_location</code>, <code>patient_count</code>, <code>patient_name</code>, <code>contact_mobile</code>, <code>age</code>, <code>gender</code>, <code>pmjay_card_number</code>, <code>referral_notes</code>, <code>otp_code</code>, <code>otp_expires_at</code>, <code>otp_attempts</code>, <code>hold_expires_at</code>, <code>status</code>, <code>hospital_desk_contact</code>, <code>created_at</code>.</li>
+    <li><strong><code>bed_request_events</code></strong>: <code>id</code> (PK), <code>request_id</code> (FK), <code>from_status</code>, <code>to_status</code>, <code>actor_type</code>, <code>actor_id</code>, <code>created_at</code>.</li>
+  </ul>
+</body>
+</html>

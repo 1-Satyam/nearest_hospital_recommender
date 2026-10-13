@@ -1,0 +1,46 @@
+<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+<head><meta charset="utf-8" /><title>ArogyaSetu — System Architecture</title></head>
+<body style="font-family:Arial,sans-serif;font-size:11pt;line-height:1.5;color:#111827;">
+  <h1 style="color:#0f172a;font-size:20pt;border-bottom:2px solid #2563eb;padding-bottom:6px;">ArogyaSetu — System Architecture (docs/ARCHITECTURE.md)</h1>
+  <p><strong>ArogyaSetu (<code>nearest_hospital_recommender</code>)</strong> is a full-stack web application designed for hospital discovery, road routing, and bed-hold coordination across 21 hospitals in Bhubaneswar, Odisha (<code>BBSR001</code>–<code>BBSR021</code>).</p>
+
+  <h2 style="color:#1e3a8a;font-size:15pt;">1. Core Algorithmic Modules (<code>backend/core/</code>)</h2>
+  <h3 style="color:#1e40af;font-size:13pt;">1.1 Deterministic Weighted Ranking (<code>backend/core/ranking.py</code>)</h3>
+  <pre style="background:#f1f5f9;padding:10px;border:1px solid #cbd5e1;font-family:Consolas,monospace;font-size:10pt;">Available_Live = max(0, Available_CSV - ActiveBookings_GENERAL_WARD)
+Availability_Pct = clip((Available_Live / Total_CSV) * 100, 0.0, 100.0)
+Score = (Availability_Pct * 100.0) + (Rating_5 * Review_Count) - Distance_km - Admission_Fee_INR</pre>
+  <p>Tie-breaking sort order: <code>(-score, distance_km, hospital_id)</code>.</p>
+
+  <h3 style="color:#1e40af;font-size:13pt;">1.2 Hybrid Spatial &amp; Road Routing (<code>backend/core/routing.py</code> &amp; <code>spatial.py</code>)</h3>
+  <ul>
+    <li><strong>Vectorized Haversine &amp; BallTree:</strong> Great-circle distance on sphere of radius R = 6371.0 km + <code>sklearn.neighbors.BallTree(metric='haversine')</code>.</li>
+    <li><strong>OSRM Primary Engine:</strong> Calls <code>router.project-osrm.org/table/v1/driving/</code> and <code>/route/v1/driving/</code> (timeout = 2.5s).</li>
+    <li><strong>Offline Fallback:</strong> Calibrated urban circuity model (<code>1.28 * Haversine</code> at <code>28 km/h</code>, min 3 minutes).</li>
+  </ul>
+
+  <h3 style="color:#1e40af;font-size:13pt;">1.3 24-Hour Synthetic Bed Forecasting (<code>backend/core/forecasting.py</code>)</h3>
+  <ul>
+    <li>Generates 120-day synthetic inventory history per hospital (seed <code>20261011 + index</code>).</li>
+    <li>6 features per day: <code>available</code>, <code>lag_1d</code>, <code>lag_7d</code>, <code>total_beds</code>, <code>day_of_week</code>, <code>occupancy_pct</code>.</li>
+    <li>Estimator: <code>GradientBoostingRegressor(n_estimators=80, learning_rate=0.04, max_depth=2, loss="huber", random_state=42)</code> trained on days 7–89, validated on days 90–119.</li>
+  </ul>
+
+  <h2 style="color:#1e3a8a;font-size:15pt;">2. Security &amp; Concurrency Architecture</h2>
+  <table border="1" cellpadding="6" cellspacing="0" style="border-collapse:collapse;width:100%;border:1px solid #cbd5e1;font-size:10pt;">
+    <thead>
+      <tr style="background:#e2e8f0;color:#0f172a;">
+        <th align="left">Layer</th>
+        <th align="left">Implementation Details</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td><strong>Serialized Bed Claiming</strong></td><td>SQLite WAL mode + <code>BEGIN IMMEDIATE</code> transactions + partial unique index <code>idx_active_hospital_bed</code> on <code>(hospital_id, bed_unit_id) WHERE status IN ('HELD', 'ADMITTED')</code>.</td></tr>
+      <tr><td><strong>Password Hashing</strong></td><td>Salted <code>hashlib.scrypt</code> (n=16384, r=8, p=1, 16-byte random salt) with transparent upgrade from legacy SHA-256.</td></tr>
+      <tr><td><strong>Session Management</strong></td><td>32-byte random token stored as SHA-256 hash in <code>user_sessions</code> (12h TTL), carried in <code>HttpOnly</code>, <code>SameSite=Lax</code> cookie.</td></tr>
+      <tr><td><strong>Login Rate Limiting</strong></td><td><code>login_attempts</code> locks a mobile number for 15 minutes after 5 failed attempts within 15 minutes (HTTP 429).</td></tr>
+      <tr><td><strong>OTP Protection</strong></td><td>6-digit OTP salted with <code>request_id</code> and hashed with SHA-256, verified via <code>hmac.compare_digest</code>, 5-minute TTL, max 5 attempts.</td></tr>
+      <tr><td><strong>Hospital Desk Scoping</strong></td><td>Staff tokens provisioned via <code>provision_desk_staff.py</code>, stored as SHA-256 hashes, strictly scoped to one <code>hospital_id</code>.</td></tr>
+    </tbody>
+  </table>
+</body>
+</html>
