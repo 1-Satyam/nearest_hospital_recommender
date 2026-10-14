@@ -45,7 +45,7 @@ python -m venv .venv
 python -m pip install -r backend/requirements.txt
 ```
 
-On macOS/Linux, activate the environment with:
+On MacOS/Linux, activate the environment with:
 
 ```bash
 source .venv/bin/activate
